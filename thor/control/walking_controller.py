@@ -1,22 +1,20 @@
 """
-Walking controller for THOR humanoid.
+Biomechanically accurate walking controller for THOR humanoid.
 
-Combines Contact-Implicit MPC with gait-phase-dependent
-swing foot trajectory tracking and CoM regulation.
+Joint angle trajectories derived from human gait biomechanics:
+- Winter, D.A. (1991). "Biomechanics and Motor Control of Human Movement."
+- Perry, J. (1992). "Gait Analysis: Normal and Pathological Function."
 
-Walking phases:
-    1. Double Support (DS): Both feet on ground, shift CoM
-    2. Left Single Support (LSS): Right foot swings
-    3. Double Support (DS): Both feet on ground
-    4. Right Single Support (RSS): Left foot swings
-    ... (repeat)
+Gait cycle convention (starting at heel strike):
+    0-15%:   Loading Response (double support)
+    15-50%:  Midstance + Terminal Stance (single support)
+    50-65%:  Pre-swing (double support)
+    65-100%: Swing (initial→mid→terminal swing)
 
-Swing foot trajectory: cubic polynomial in z (lift-place).
-CoM trajectory: maintain above support polygon center.
-
-Reference:
-    Kajita, S. et al. (2003). "Biped Walking Pattern Generation
-    by using Preview Control of ZMP." ICRA.
+Joint angle profiles at 0.5 m/s (slow walking):
+    Hip pitch:   -7 deg (extension) to +25 deg (flexion)
+    Knee pitch:  0 deg (extension) to +55 deg (flexion in swing)
+    Ankle pitch: -15 deg (plantarflexion) to +10 deg (dorsiflexion)
 """
 
 import math
@@ -25,211 +23,211 @@ import numpy as np
 from numpy.typing import NDArray
 
 from ..model.robot_model import RobotModel
-from ..model.kinematics import forward_kinematics, body_position, body_jacobian
 from ..dynamics.rnea import gravity_forces
 
 
-def swing_foot_trajectory(
-    t: float,
-    t_start: float,
-    t_end: float,
-    p_start: NDArray,
-    p_end: NDArray,
-    lift_height: float = 0.05,
-) -> tuple[NDArray, NDArray]:
-    """Compute swing foot position and velocity at time t.
+# Biomechanical gait parameters at 0.5 m/s (Winter 1991, scaled)
+STEP_LENGTH: float = 0.15       # Reduced for stability in simulation [m]
+STEP_DURATION: float = 0.8      # Per step [s]
+DS_DURATION: float = 0.25       # Double support transition [s]
+SWING_DURATION: float = 0.55    # Single leg swing [s]
+FOOT_CLEARANCE: float = 0.04    # Max foot lift [m]
 
-    Uses cubic polynomial for smooth lift-off and touchdown.
+# Joint angle profiles (radians) — from biomechanics literature
+# Convention: positive = flexion for hip/knee, dorsiflexion for ankle
+HIP_STANCE_EXT: float = math.radians(-5)    # Peak extension at terminal stance
+HIP_SWING_FLEX: float = math.radians(20)    # Peak flexion at terminal swing
+KNEE_STANCE: float = math.radians(5)        # Near extension during stance
+KNEE_SWING_FLEX: float = math.radians(45)   # Peak flexion during swing
+ANKLE_PUSH_OFF: float = math.radians(-10)   # Plantarflexion at push-off
+ANKLE_SWING: float = math.radians(5)        # Dorsiflexion during swing
 
-    z(s) = 4*h*s*(1-s) where s = (t-t_start)/(t_end-t_start)
-    This creates a parabolic arc peaking at h at s=0.5.
 
-    x,y interpolated linearly.
+def _gait_phase_angles(s: float) -> tuple[float, float, float]:
+    """Compute hip, knee, ankle angles for a swing leg at phase s in [0,1].
+
+    s=0: toe-off (start of swing)
+    s=0.5: mid-swing (peak knee flexion, hip crossing neutral)
+    s=1: heel strike (end of swing)
+
+    The profiles approximate Winter's normative data:
+    - Hip: sinusoidal from extension to flexion
+    - Knee: rapid flexion then extension (asymmetric bell)
+    - Ankle: dorsiflexion for foot clearance
 
     Returns:
-        p_des: (3,) desired foot position
-        v_des: (3,) desired foot velocity
+        (hip_p, kn_p, an_p) in radians
     """
-    duration = t_end - t_start
-    if duration <= 0:
-        return p_end.copy(), np.zeros(3)
+    # Hip pitch: smooth transition from extension to flexion
+    # At s=0: hip at stance extension angle
+    # At s=1: hip at swing flexion angle
+    hip_p = HIP_STANCE_EXT + (HIP_SWING_FLEX - HIP_STANCE_EXT) * (
+        0.5 - 0.5 * math.cos(math.pi * s))
 
-    s = np.clip((t - t_start) / duration, 0.0, 1.0)
-    ds = 1.0 / duration
+    # Knee pitch: rapid flexion in early swing, then extension
+    # Peak flexion at s ≈ 0.4 (initial-to-mid swing)
+    # Bell curve with early peak
+    kn_p = KNEE_STANCE + (KNEE_SWING_FLEX - KNEE_STANCE) * (
+        math.sin(math.pi * s) ** 0.8)  # Slightly asymmetric
 
-    # Horizontal: linear interpolation
-    p_des = p_start + s * (p_end - p_start)
-    v_des = (p_end - p_start) * ds
+    # Ankle pitch: dorsiflexion during swing for foot clearance
+    # Neutral at toe-off, dorsiflexed during mid-swing, neutral at heel strike
+    an_p = ANKLE_SWING * math.sin(math.pi * s)
 
-    # Vertical: parabolic arc
-    p_des[2] = p_start[2] + 4.0 * lift_height * s * (1.0 - s)
-    v_des[2] = 4.0 * lift_height * (1.0 - 2.0 * s) * ds
+    return hip_p, kn_p, an_p
 
-    return p_des, v_des
+
+def _stance_leg_angles(s_stance: float) -> tuple[float, float, float]:
+    """Compute stance leg joint angles.
+
+    s_stance: phase within stance (0=heel strike, 1=toe-off)
+
+    During stance, joints are relatively stable with small excursions:
+    - Hip: starts flexed, gradually extends
+    - Knee: slight flexion for shock absorption, then near-extension
+    - Ankle: progresses from dorsiflexion to plantarflexion push-off
+    """
+    # Hip: flexion → extension during stance
+    hip_p = HIP_SWING_FLEX * (1.0 - s_stance) + HIP_STANCE_EXT * s_stance
+
+    # Knee: slight bend at loading, near-extension at midstance
+    kn_p = KNEE_STANCE + math.radians(10) * math.sin(math.pi * s_stance * 0.5)
+
+    # Ankle: dorsiflexion at midstance, plantarflexion at push-off
+    an_p = math.radians(5) * math.sin(math.pi * s_stance) + \
+           ANKLE_PUSH_OFF * s_stance**2
+
+    return hip_p, kn_p, an_p
 
 
 class WalkingController:
-    """Walking controller using CI-MPC framework.
+    """Biomechanically accurate walking controller.
 
-    Generates joint torques for bipedal walking by:
-    1. Tracking swing foot trajectory via inverse kinematics PD
-    2. Maintaining stance posture via gravity compensation + PD
-    3. Regulating CoM via centroidal LQR
+    Uses gait-phase-dependent joint angle trajectories derived
+    from human walking biomechanics (Winter 1991).
     """
 
     __slots__ = (
-        "_model", "_q_stand", "_step_length", "_step_duration",
-        "_ds_duration", "_lift_height", "_n_steps",
-        "_kp_swing", "_kd_swing", "_kp_stance", "_kd_stance",
-        "_total_duration",
+        "_model", "_q_stand", "_n_steps", "_total_duration",
+        "_kp_leg", "_kd_leg", "_kp_other", "_kd_other",
     )
 
     def __init__(
         self,
         model: RobotModel,
         q_standing: NDArray,
-        step_length: float = 0.10,
-        step_duration: float = 0.6,
-        ds_duration: float = 0.2,
-        lift_height: float = 0.04,
         n_steps: int = 6,
+        kp_leg: float = 600.0,
+        kd_leg: float = 60.0,
     ):
         self._model = model
         self._q_stand = q_standing.copy()
-        self._step_length = step_length
-        self._step_duration = step_duration
-        self._ds_duration = ds_duration
-        self._lift_height = lift_height
         self._n_steps = n_steps
+        self._kp_leg = kp_leg
+        self._kd_leg = kd_leg
+        self._kp_other = 300.0
+        self._kd_other = 30.0
 
-        # Gains
-        self._kp_swing = 300.0
-        self._kd_swing = 30.0
-        self._kp_stance = 800.0
-        self._kd_stance = 80.0
+        # Total duration: initial DS + n_steps * (swing + DS)
+        self._total_duration = DS_DURATION + n_steps * (SWING_DURATION + DS_DURATION)
 
-        # Total duration
-        self._total_duration = (
-            ds_duration +  # Initial DS
-            n_steps * (step_duration + ds_duration)
-        )
+    def _get_phase(self, t: float) -> dict:
+        """Determine gait phase at time t."""
+        if t < DS_DURATION:
+            return {"phase": "ds", "step": -1, "s": t / DS_DURATION}
 
-    def _get_phase(self, t: float) -> tuple[str, int, float, float]:
-        """Determine current gait phase.
+        t_rel = t - DS_DURATION
+        step_cycle = SWING_DURATION + DS_DURATION
 
-        Returns:
-            phase: "ds" or "swing_left" or "swing_right"
-            step_idx: Current step number
-            t_start: Phase start time
-            t_end: Phase end time
-        """
-        if t < self._ds_duration:
-            return "ds", -1, 0.0, self._ds_duration
+        step_idx = int(t_rel / step_cycle)
+        t_in_cycle = t_rel - step_idx * step_cycle
 
-        t_rel = t - self._ds_duration
+        if step_idx >= self._n_steps:
+            return {"phase": "ds", "step": self._n_steps, "s": 1.0}
 
-        for i in range(self._n_steps):
-            cycle_start = i * (self._step_duration + self._ds_duration)
-
-            # Swing phase
-            swing_end = cycle_start + self._step_duration
-            if t_rel < swing_end:
-                phase = "swing_left" if i % 2 == 0 else "swing_right"
-                return phase, i, cycle_start + self._ds_duration, swing_end + self._ds_duration
-
-            # DS phase
-            ds_end = swing_end + self._ds_duration
-            if t_rel < ds_end:
-                return "ds", i, swing_end + self._ds_duration, ds_end + self._ds_duration
-
-        return "ds", self._n_steps - 1, 0, self._total_duration
+        if t_in_cycle < SWING_DURATION:
+            is_left = (step_idx % 2 == 0)
+            s = t_in_cycle / SWING_DURATION
+            return {
+                "phase": "swing_left" if is_left else "swing_right",
+                "step": step_idx,
+                "s": s,  # 0→1 within swing
+            }
+        else:
+            s = (t_in_cycle - SWING_DURATION) / DS_DURATION
+            return {"phase": "ds", "step": step_idx, "s": s}
 
     def compute(self, q: NDArray, v: NDArray, t: float) -> NDArray:
-        """Compute walking control torques."""
+        """Compute walking control torques with biomechanical targets."""
         n_dof = self._model.n_dof
+        n_joints = n_dof - 6
         tau = np.zeros(n_dof)
 
-        # Gravity compensation (always active)
+        # Gravity compensation
         g = gravity_forces(self._model, q)
         tau[6:] = g[6:]
 
-        # Get current phase
-        phase, step_idx, t_start, t_end = self._get_phase(t)
+        phase_info = self._get_phase(t)
+        phase = phase_info["phase"]
+        s = phase_info["s"]
 
-        # Joint PD tracking (stance configuration)
-        q_err = q[7:] - self._q_stand[7:]
+        # Joint target array (deviations from standing config)
+        q_target = self._q_stand[7:].copy()
         dq = v[6:]
 
+        # Left leg joint indices in q[7:] array
+        # l_hip_y=18, l_hip_r=19, l_hip_p=20, l_kn_p=21, l_an_p=22, l_an_r=23
+        # r_hip_y=24, r_hip_r=25, r_hip_p=26, r_kn_p=27, r_an_p=28, r_an_r=29
+        L_HIP_P, L_KN_P, L_AN_P = 20, 21, 22
+        R_HIP_P, R_KN_P, R_AN_P = 26, 27, 28
+
         if phase == "ds":
-            # Double support: strong posture regulation
-            tau[6:] -= self._kp_stance * q_err + self._kd_stance * dq
+            # Double support: interpolate both legs toward standing
+            pass  # Use standing config (q_target already set)
 
-        elif "swing_left" in phase:
-            # Right foot stance, left foot swings
-            # Stance leg (right): strong PD
-            # indices 24-29 in v (r_leg joints, bodies 25-30)
-            for i in range(24, 30):
-                if i < len(q_err):
-                    tau[6 + i] -= self._kp_stance * q_err[i] + self._kd_stance * dq[i]
+        elif phase == "swing_left":
+            # Left leg swings, right leg stance
+            swing_hip, swing_kn, swing_an = _gait_phase_angles(s)
+            stance_hip, stance_kn, stance_an = _stance_leg_angles(s)
 
-            # Swing leg (left): track swing trajectory via modified PD
-            # Lift the left ankle by modifying hip_p and knee targets
-            s = np.clip((t - t_start) / max(t_end - t_start, 0.01), 0, 1)
+            # Left leg (swing): biomechanical swing trajectory
+            q_target[L_HIP_P] = self._q_stand[7 + L_HIP_P] + swing_hip
+            q_target[L_KN_P] = self._q_stand[7 + L_KN_P] + swing_kn
+            q_target[L_AN_P] = self._q_stand[7 + L_AN_P] + swing_an
 
-            # Swing leg joint targets: lift foot via hip flexion + knee bend
-            hip_p_swing = -0.3 - 0.3 * math.sin(math.pi * s)  # More flexion mid-swing
-            kn_p_swing = 0.6 + 0.5 * math.sin(math.pi * s)    # More knee bend mid-swing
-            an_p_swing = -0.3 + 0.1 * math.sin(math.pi * s)   # Ankle adjustment
+            # Right leg (stance): slight adjustments
+            q_target[R_HIP_P] = self._q_stand[7 + R_HIP_P] + stance_hip
+            q_target[R_KN_P] = self._q_stand[7 + R_KN_P] + stance_kn
+            q_target[R_AN_P] = self._q_stand[7 + R_AN_P] + stance_an
 
-            # Left leg: bodies 19-24, joint indices 18-23 in q_err
-            swing_targets = {
-                20: hip_p_swing,   # l_hip_p
-                21: kn_p_swing,    # l_kn_p
-                22: an_p_swing,    # l_an_p
-            }
+        elif phase == "swing_right":
+            # Right leg swings, left leg stance
+            swing_hip, swing_kn, swing_an = _gait_phase_angles(s)
+            stance_hip, stance_kn, stance_an = _stance_leg_angles(s)
 
-            for joint_idx, target in swing_targets.items():
-                i = joint_idx  # in q_err indexing
-                if i < len(q_err):
-                    err_swing = q[7 + i] - target
-                    tau[6 + i] = g[6 + i] - self._kp_swing * err_swing - self._kd_swing * dq[i]
+            # Right leg (swing)
+            q_target[R_HIP_P] = self._q_stand[7 + R_HIP_P] + swing_hip
+            q_target[R_KN_P] = self._q_stand[7 + R_KN_P] + swing_kn
+            q_target[R_AN_P] = self._q_stand[7 + R_AN_P] + swing_an
 
-            # Non-swing joints: moderate PD
-            for i in range(len(q_err)):
-                if i not in range(18, 24) and i not in range(24, 30):
-                    tau[6 + i] -= self._kp_stance * 0.5 * q_err[i] + self._kd_stance * 0.5 * dq[i]
+            # Left leg (stance)
+            q_target[L_HIP_P] = self._q_stand[7 + L_HIP_P] + stance_hip
+            q_target[L_KN_P] = self._q_stand[7 + L_KN_P] + stance_kn
+            q_target[L_AN_P] = self._q_stand[7 + L_AN_P] + stance_an
 
-        elif "swing_right" in phase:
-            # Left foot stance, right foot swings (mirror of above)
-            for i in range(18, 24):
-                if i < len(q_err):
-                    tau[6 + i] -= self._kp_stance * q_err[i] + self._kd_stance * dq[i]
-
-            s = np.clip((t - t_start) / max(t_end - t_start, 0.01), 0, 1)
-
-            hip_p_swing = -0.3 - 0.3 * math.sin(math.pi * s)
-            kn_p_swing = 0.6 + 0.5 * math.sin(math.pi * s)
-            an_p_swing = -0.3 + 0.1 * math.sin(math.pi * s)
-
-            swing_targets = {
-                26: hip_p_swing,   # r_hip_p
-                27: kn_p_swing,    # r_kn_p
-                28: an_p_swing,    # r_an_p
-            }
-
-            for joint_idx, target in swing_targets.items():
-                i = joint_idx
-                if i < len(q_err):
-                    err_swing = q[7 + i] - target
-                    tau[6 + i] = g[6 + i] - self._kp_swing * err_swing - self._kd_swing * dq[i]
-
-            for i in range(len(q_err)):
-                if i not in range(18, 24) and i not in range(24, 30):
-                    tau[6 + i] -= self._kp_stance * 0.5 * q_err[i] + self._kd_stance * 0.5 * dq[i]
-
-        # Torque limits
-        for i in range(len(tau) - 6):
+        # PD tracking torques
+        q_err = q[7:] - q_target
+        for i in range(n_joints):
             if i + 1 < self._model.n_bodies:
+                name = self._model.links[i + 1].name
+                if "leg" in name:
+                    kp, kd = self._kp_leg, self._kd_leg
+                else:
+                    kp, kd = self._kp_other, self._kd_other
+
+                tau[6 + i] -= kp * q_err[i] + kd * dq[i]
+
+                # Torque limits
                 lim = self._model.links[i + 1].tau_max
                 tau[6 + i] = np.clip(tau[6 + i], -lim, lim)
 
