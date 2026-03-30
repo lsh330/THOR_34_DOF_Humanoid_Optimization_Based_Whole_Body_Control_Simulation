@@ -8,11 +8,13 @@ import math
 import numpy as np
 import pytest
 
-from thor.control.walking_controller import (
-    _gait_phase_angles, _stance_leg_angles,
-    WalkingController, HIP_SWING_FLEX, HIP_STANCE_EXT,
+from thor.control.gait.swing_trajectory import (
+    swing_leg_angles as _gait_phase_angles,
+    stance_leg_angles as _stance_leg_angles,
+    HIP_SWING_FLEX, HIP_STANCE_EXT,
     KNEE_SWING_FLEX, KNEE_STANCE,
 )
+from thor.control.walking_controller import WalkingController
 from thor.model.robot_model import RobotModel
 from thor.simulation.standing import default_standing_config
 

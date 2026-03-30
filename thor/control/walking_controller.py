@@ -24,80 +24,20 @@ from numpy.typing import NDArray
 
 from ..model.robot_model import RobotModel
 from ..dynamics.rnea import gravity_forces
+from .gait.phase_detector import detect_phase
+from .gait.swing_trajectory import (
+    swing_leg_angles as _gait_phase_angles,
+    stance_leg_angles as _stance_leg_angles,
+    HIP_STANCE_EXT, HIP_SWING_FLEX, KNEE_STANCE, KNEE_SWING_FLEX,
+    ANKLE_PUSH_OFF, ANKLE_SWING,
+)
 
-
-# Biomechanical gait parameters at 0.5 m/s (Winter 1991, scaled)
-STEP_LENGTH: float = 0.15       # Reduced for stability in simulation [m]
-STEP_DURATION: float = 0.8      # Per step [s]
-DS_DURATION: float = 0.25       # Double support transition [s]
-SWING_DURATION: float = 0.55    # Single leg swing [s]
-FOOT_CLEARANCE: float = 0.04    # Max foot lift [m]
-
-# Joint angle profiles (radians) — from biomechanics literature
-# Convention: positive = flexion for hip/knee, dorsiflexion for ankle
-HIP_STANCE_EXT: float = math.radians(-5)    # Peak extension at terminal stance
-HIP_SWING_FLEX: float = math.radians(20)    # Peak flexion at terminal swing
-KNEE_STANCE: float = math.radians(5)        # Near extension during stance
-KNEE_SWING_FLEX: float = math.radians(45)   # Peak flexion during swing
-ANKLE_PUSH_OFF: float = math.radians(-10)   # Plantarflexion at push-off
-ANKLE_SWING: float = math.radians(5)        # Dorsiflexion during swing
-
-
-def _gait_phase_angles(s: float) -> tuple[float, float, float]:
-    """Compute hip, knee, ankle angles for a swing leg at phase s in [0,1].
-
-    s=0: toe-off (start of swing)
-    s=0.5: mid-swing (peak knee flexion, hip crossing neutral)
-    s=1: heel strike (end of swing)
-
-    The profiles approximate Winter's normative data:
-    - Hip: sinusoidal from extension to flexion
-    - Knee: rapid flexion then extension (asymmetric bell)
-    - Ankle: dorsiflexion for foot clearance
-
-    Returns:
-        (hip_p, kn_p, an_p) in radians
-    """
-    # Hip pitch: smooth transition from extension to flexion
-    # At s=0: hip at stance extension angle
-    # At s=1: hip at swing flexion angle
-    hip_p = HIP_STANCE_EXT + (HIP_SWING_FLEX - HIP_STANCE_EXT) * (
-        0.5 - 0.5 * math.cos(math.pi * s))
-
-    # Knee pitch: rapid flexion in early swing, then extension
-    # Peak flexion at s ≈ 0.4 (initial-to-mid swing)
-    # Bell curve with early peak
-    kn_p = KNEE_STANCE + (KNEE_SWING_FLEX - KNEE_STANCE) * (
-        math.sin(math.pi * s) ** 0.8)  # Slightly asymmetric
-
-    # Ankle pitch: dorsiflexion during swing for foot clearance
-    # Neutral at toe-off, dorsiflexed during mid-swing, neutral at heel strike
-    an_p = ANKLE_SWING * math.sin(math.pi * s)
-
-    return hip_p, kn_p, an_p
-
-
-def _stance_leg_angles(s_stance: float) -> tuple[float, float, float]:
-    """Compute stance leg joint angles.
-
-    s_stance: phase within stance (0=heel strike, 1=toe-off)
-
-    During stance, joints are relatively stable with small excursions:
-    - Hip: starts flexed, gradually extends
-    - Knee: slight flexion for shock absorption, then near-extension
-    - Ankle: progresses from dorsiflexion to plantarflexion push-off
-    """
-    # Hip: flexion → extension during stance
-    hip_p = HIP_SWING_FLEX * (1.0 - s_stance) + HIP_STANCE_EXT * s_stance
-
-    # Knee: slight bend at loading, near-extension at midstance
-    kn_p = KNEE_STANCE + math.radians(10) * math.sin(math.pi * s_stance * 0.5)
-
-    # Ankle: dorsiflexion at midstance, plantarflexion at push-off
-    an_p = math.radians(5) * math.sin(math.pi * s_stance) + \
-           ANKLE_PUSH_OFF * s_stance**2
-
-    return hip_p, kn_p, an_p
+# Gait timing (0.5 m/s, Winter 1991 scaled)
+STEP_LENGTH: float = 0.15
+STEP_DURATION: float = 0.8
+DS_DURATION: float = 0.25
+SWING_DURATION: float = 0.55
+FOOT_CLEARANCE: float = 0.04
 
 
 class WalkingController:
@@ -132,30 +72,8 @@ class WalkingController:
         self._total_duration = DS_DURATION + n_steps * (SWING_DURATION + DS_DURATION)
 
     def _get_phase(self, t: float) -> dict:
-        """Determine gait phase at time t."""
-        if t < DS_DURATION:
-            return {"phase": "ds", "step": -1, "s": t / DS_DURATION}
-
-        t_rel = t - DS_DURATION
-        step_cycle = SWING_DURATION + DS_DURATION
-
-        step_idx = int(t_rel / step_cycle)
-        t_in_cycle = t_rel - step_idx * step_cycle
-
-        if step_idx >= self._n_steps:
-            return {"phase": "ds", "step": self._n_steps, "s": 1.0}
-
-        if t_in_cycle < SWING_DURATION:
-            is_left = (step_idx % 2 == 0)
-            s = t_in_cycle / SWING_DURATION
-            return {
-                "phase": "swing_left" if is_left else "swing_right",
-                "step": step_idx,
-                "s": s,  # 0→1 within swing
-            }
-        else:
-            s = (t_in_cycle - SWING_DURATION) / DS_DURATION
-            return {"phase": "ds", "step": step_idx, "s": s}
+        """Determine gait phase at time t (delegates to gait.phase_detector)."""
+        return detect_phase(t, DS_DURATION, SWING_DURATION, self._n_steps)
 
     def compute(self, q: NDArray, v: NDArray, t: float) -> NDArray:
         """Compute walking control torques with biomechanical targets."""
