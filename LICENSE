@@ -1,0 +1,43 @@
+MIT License
+
+Copyright (c) 2026 Sanghoon Lee
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Acknowledgements
+
+This project implements optimization-based whole-body control for the THOR
+34-DOF humanoid robot, developed by Virginia Tech RoMeLa and TREC Labs.
+
+Theoretical foundations are based on the following seminal works:
+
+- Hopkins, M.A. & Leonessa, A. (2015). "Optimization-Based Whole-Body Control
+  of a Series Elastic Humanoid Robot." Int. J. Humanoid Robotics, 12(3).
+- Orin, D.E., Goswami, A. & Lee, S.-H. (2013). "Centroidal Dynamics of a
+  Humanoid Robot." Autonomous Robots, 35(2-3), 161-176.
+- Escande, A., Mansard, N. & Wieber, P.-B. (2014). "Hierarchical Quadratic
+  Programming." Int. J. Robotics Research, 33(7), 1006-1028.
+- Meduri, A. et al. (2023). "BiConMP: A Nonlinear Model Predictive Control
+  Framework for Whole Body Motion Planning." IEEE Trans. Robotics, 39(2).
+- Posa, M., Cantu, C. & Tedrake, R. (2014). "A Direct Method for Trajectory
+  Optimization of Rigid Bodies Through Contact." IJRR, 33(1), 69-81.
+- Featherstone, R. (2008). "Rigid Body Dynamics Algorithms." Springer.
+
+Special thanks to the open-source communities behind NumPy, SciPy, Numba,
+and Matplotlib.
