@@ -497,14 +497,16 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 ### 8.9 Performance Summary
 
-| Metric | Standing (CI-MPC) | Walking |
+| Metric | Standing (CI-MPC) | Walking (CTC) |
 |:---|:---|:---|
-| CoM z stability (std) | **1.57 mm** | **4.7 mm** |
-| Contact maintenance | 2/2 feet, 100% | 2/2, gait phases |
-| Base height drift | 0.000 m | < 1 cm |
-| Duration | 5.0 s | 3.4 s (4 steps) |
-| Simulation speed | **114 steps/s** | 146 steps/s |
-| Per-step time | 8.76 ms | 6.8 ms |
+| CoM z stability (std) | **1.57 mm** | oscillating (biomechanical) |
+| Contact maintenance | 2/2 feet, 100% | 2/2 (constrained base) |
+| Gait steps | — | **6 full steps, no degradation** |
+| Duration | 5.0 s | **5.1 s** |
+| Hip pitch range | 0 | **-5 to +20.5 deg** (Winter 1991) |
+| Knee swing flexion | 0 | **+36.5 deg** (biomechanical) |
+| Control method | CI-MPC + LCP | **Computed Torque Control** |
+| Simulation speed | 114 steps/s | ~180 steps/s |
 
 | Dynamics Verification | Result |
 |:---|:---|
