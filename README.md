@@ -368,14 +368,27 @@ Contact-Implicit MPC embeds the LCP contact resolution **inside** the MPC optimi
 
 ### 7.2 MPC Optimization Problem
 
+```math
+\min_{\mathbf{v}_{1:T},\, \mathbf{q}_{1:T},\, \mathbf{u}_{0:T-1},\, \boldsymbol{\lambda}_{0:T-1}} \;\; \sum_{k=0}^{T-1} \left[ \|\mathbf{q}_k - \mathbf{q}_k^{\mathrm{ref}}\|^2_{Q_q} + \|\mathbf{v}_k - \mathbf{v}_k^{\mathrm{ref}}\|^2_{Q_v} + \|\mathbf{u}_k\|^2_R \right]
 ```
-min   sum_{k=0}^{T-1} [ ||q_k - q_ref||^2_{Q_q} + ||v_k - v_ref||^2_{Q_v} + ||u_k||^2_R ]
 
-subject to:
-    M_bar * (v_{k+1} - v_k) = h * [-C_bar + B_bar * u_k] + J_bar^T * lambda_k
-    q_{k+1} = q_k + h * v_{k+1}
-    0 <= lambda_k  perp  (phi_bar + N_bar*(q_k - q_bar))/h + J_bar*v_{k+1} >= 0
+subject to the **contact-implicit dynamics** at each horizon step:
+
+```math
+\bar{M}(\mathbf{v}_{k+1} - \mathbf{v}_k) = h\left[-\bar{C}\mathbf{v}_k + \bar{B}\mathbf{u}_k\right] + \bar{J}_n^T \boldsymbol{\lambda}_k
 ```
+
+```math
+\mathbf{q}_{k+1} = \mathbf{q}_k + h\,\mathbf{v}_{k+1}
+```
+
+and the **LCP complementarity constraint** (Signorini condition with linearized signed distance):
+
+```math
+0 \leq \boldsymbol{\lambda}_k \;\perp\; \frac{\bar{\phi} + \bar{N}(\mathbf{q}_k - \bar{\mathbf{q}})}{h} + \bar{J}_n \mathbf{v}_{k+1} \geq 0
+```
+
+where every barred quantity is **frozen at the reference trajectory** (strategic Taylor approximation).
 
 ### 7.3 Strategic Taylor Approximations
 
@@ -543,16 +556,28 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 ```bash
 $ python -m pytest thor/tests/ -v
-========================= 13 passed in 0.45s =========================
+========================= 58 passed in 0.87s =========================
 ```
 
-| Category | Tests | Validates |
+### 10.1 Test Suite Overview (58 tests across 5 modules)
+
+| Module | Tests | Validates |
 |:---|---:|:---|
-| Robot Model | 4 | Body count (35), DOF (40), mass (67.2 kg), foot links |
-| Kinematics | 3 | Base position (1.02 m), CoM z > 0.5 m, lateral symmetry |
-| Gravity | 2 | Force = mg = 659.27 N, correct dimensionality (40,) |
-| Mass Matrix | 3 | Symmetry M = M^T, positive-definiteness, shape (40 x 40) |
-| Standing | 1 | Gravity compensation produces zero joint acceleration |
+| `test_spatial.py` | 20 | Rotation (identity, orthogonality, det=1, composition), skew (antisymmetry, cross product, roundtrip), spatial transform (identity, inverse), spatial inertia (SPD, zero-CoM), cross products, motion subspace |
+| `test_dynamics.py` | 13 | Robot model (35 bodies, 40 DOF, 67.2 kg), FK (base pos, CoM), gravity (mg=659N), mass matrix (symmetric, PD, 40x40), standing (zero accel) |
+| `test_algorithms.py` | 10 | **CRBA-RNEA cross-validation** (M*ddq+h = RNEA(q,0,ddq) to 1e-6), gravity=bias at zero vel, centroidal momentum direction, M translational diagonal = m*I_3, M SPD at 5 random configs, condition number < 1e7, free-fall energy conservation (<5%) |
+| `test_lcp.py` | 6 | Trivial solution (q>=0), 2x2 analytical, complementarity z*w=0, contact Delassus, IP vs FB-Newton cross-validation, 4x4 random SPD |
+| `test_walking.py` | 9 | Swing start/end boundary, mid-swing knee flexion (>30 deg), hip range (-15 to +35 deg biomechanical), knee range (0-60 deg), ankle range (-25 to +20 deg), stance trajectory, phase detection, torque limits |
+
+### 10.2 Key Cross-Validation: CRBA vs RNEA
+
+The most critical test verifies that two independently implemented O(N) algorithms produce consistent results:
+
+```math
+M(\mathbf{q})\ddot{\mathbf{q}} + \mathbf{h}(\mathbf{q}, \dot{\mathbf{q}}) = \mathrm{RNEA}(\mathbf{q}, \dot{\mathbf{q}}, \ddot{\mathbf{q}})
+```
+
+This is verified for random accelerations with tolerance 1e-6, confirming both the CRBA mass matrix and the RNEA inverse dynamics are correctly implemented.
 
 ---
 
