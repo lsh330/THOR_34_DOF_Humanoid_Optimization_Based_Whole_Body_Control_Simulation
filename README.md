@@ -250,8 +250,8 @@ The centroidal momentum **h**_G relates the full-body velocity to the 6D momentu
 
 where **k**_G is the angular momentum about the CoM, and **l**_G = m**c_dot** is the linear momentum. The centroidal dynamics (Newton-Euler at CoM) give:
 
-```
-d(h_G)/dt = sum of external wrenches + [0; mg]
+```math
+\dot{\mathbf{h}}_G = \sum_i \mathbf{f}_i^{\mathrm{ext}} + \begin{bmatrix} \mathbf{0} \\ m\mathbf{g} \end{bmatrix}
 ```
 
 This 6D equation governs the overall balance of the robot — it is the foundation for the centroidal LQR controller (Layer 1).
@@ -336,22 +336,22 @@ The Delassus matrix A represents the **apparent compliance** at the contact poin
 
 We solve the LCP by reformulating it as a smooth system of equations using the Fischer-Burmeister (FB) function:
 
-```
-phi_FB(a, b) = a + b - sqrt(a^2 + b^2 + 2*eps^2)
+```math
+\phi_{\mathrm{FB}}(a, b) = a + b - \sqrt{a^2 + b^2 + 2\epsilon^2}
 ```
 
 **Key property:** phi_FB(a, b) = 0 if and only if a >= 0, b >= 0, and a*b = 0 (as eps -> 0). Unlike min(a,b), the FB function is **differentiable everywhere**, enabling Newton's method.
 
 The LCP becomes n scalar equations:
 
-```
-F_i(lambda) = phi_FB(lambda_i, w_i) = 0,   for i = 1, ..., n_c
+```math
+F_i(\boldsymbol{\lambda}) = \phi_{\mathrm{FB}}(\lambda_i, w_i) = 0, \quad i = 1, \ldots, n_c
 ```
 
 Solved by **damped Newton iteration** with backtracking line search. The Jacobian of F is:
 
-```
-J[i,j] = (1 - lambda_i / D_i) * delta_{ij} + (1 - w_i / D_i) * A[i,j]
+```math
+\frac{\partial F_i}{\partial \lambda_j} = \left(1 - \frac{\lambda_i}{D_i}\right)\delta_{ij} + \left(1 - \frac{w_i}{D_i}\right)A_{ij}, \quad D_i = \sqrt{\lambda_i^2 + w_i^2 + 2\epsilon^2}
 ```
 
 where D_i = sqrt(lambda_i^2 + w_i^2 + 2*eps^2).
