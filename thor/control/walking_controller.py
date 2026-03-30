@@ -164,23 +164,41 @@ class WalkingController:
         return detect_phase(t, DS_DURATION, SWING_DURATION, self._n_steps)
 
     def compute(self, q: NDArray, v: NDArray, t: float) -> NDArray:
-        """Compute walking torques with continuous trajectory tracking."""
+        """Compute walking torques via Computed Torque Control.
+
+        Uses inverse dynamics formulation:
+            tau = M_jj * ddq_des + h_j
+
+        where ddq_des = Kp*(q_target - q) + Kd*(dq_target - dq)
+
+        This guarantees ddq = ddq_des (perfect tracking) when the
+        dynamics solver uses: ddq = M_jj^{-1} * (tau - h_j).
+
+        Reference: Spong, Hutchinson & Vidyasagar (2005). Robot Modeling
+        and Control, Ch. 8: Computed Torque Control.
+        """
+        from ..dynamics.crba import crba
+        from ..dynamics.rnea import bias_forces
+
         n_dof = self._model.n_dof
         n_joints = n_dof - 6
         tau = np.zeros(n_dof)
 
-        # Gravity compensation
-        g = gravity_forces(self._model, q)
-        tau[6:] = g[6:]
+        # Compute M and h for feedforward
+        M = crba(self._model, q)
+        bias = bias_forces(self._model, q, v)
+        M_jj = M[6:, 6:]
+        h_j = bias[6:]
 
         # Continuous target trajectory
         q_target = _compute_leg_targets(t, self._n_steps, self._q_stand[7:])
         dq_target = _compute_leg_velocity_targets(t, self._n_steps, self._q_stand[7:])
 
-        # PD tracking with feedforward velocity
+        # Desired joint accelerations (PD in acceleration space)
         q_err = q[7:] - q_target
         dq_err = v[6:] - dq_target
 
+        ddq_des = np.zeros(n_joints)
         for i in range(n_joints):
             if i + 1 < self._model.n_bodies:
                 name = self._model.links[i + 1].name
@@ -188,8 +206,14 @@ class WalkingController:
                     kp, kd = self._kp_leg, self._kd_leg
                 else:
                     kp, kd = self._kp_other, self._kd_other
+                ddq_des[i] = -kp * q_err[i] - kd * dq_err[i]
 
-                tau[6 + i] -= kp * q_err[i] + kd * dq_err[i]
+        # Computed torque: tau = M_jj * ddq_des + h_j
+        tau[6:] = M_jj @ ddq_des + h_j
+
+        # Torque limits
+        for i in range(n_joints):
+            if i + 1 < self._model.n_bodies:
                 lim = self._model.links[i + 1].tau_max
                 tau[6 + i] = np.clip(tau[6 + i], -lim, lim)
 

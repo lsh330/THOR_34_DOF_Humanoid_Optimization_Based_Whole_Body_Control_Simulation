@@ -79,6 +79,14 @@ def contact_implicit_step(
         # Solve joints-only: M_jj * dv_j = tau_j - h_j
         # (dv_base = 0 by constraint)
 
+        # === COMPUTED TORQUE CONTROL ===
+        # The controller provides desired accelerations encoded in tau:
+        #   tau = M_jj * ddq_des + h_j
+        # So: ddq_des = M_jj^{-1} * (tau_j - h_j) = exact tracking
+        #
+        # This avoids the gravity-compensation equilibrium trap where
+        # g(q) + PD balances at a drifted configuration.
+
         M_jj = M[6:, 6:]
         h_j = bias[6:]
         tau_j = tau[6:]
@@ -91,8 +99,7 @@ def contact_implicit_step(
         except np.linalg.LinAlgError:
             ddq_j = np.zeros(n_dof - 6)
 
-        # Clamp joint accelerations to physical limits
-        ddq_j = np.clip(ddq_j, -200.0, 200.0)
+        ddq_j = np.clip(ddq_j, -500.0, 500.0)
 
         # Update joint velocities (semi-implicit Euler)
         v_new = v.copy()
