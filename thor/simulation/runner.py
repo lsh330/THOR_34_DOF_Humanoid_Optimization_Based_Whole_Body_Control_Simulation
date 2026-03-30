@@ -1,14 +1,19 @@
 """
-Floating-base simulation runner with contact dynamics.
+Floating-base simulation with Jacobian-transpose contact model.
 
-Uses verified CRBA + RNEA (instead of ABA) for numerical stability:
-    M(q) * ddq = S^T * tau + J_c^T * f_c - h(q, v)
+Contact force computed in Cartesian space, mapped to generalized
+forces via Jacobian transpose:
+    tau_contact = J_foot^T * f_contact
 
-Contact model: Spring-Damper (Kelvin-Voigt) with continuous friction.
+where f_contact is a spring-damper force in world frame:
+    f_z = k * max(0, -phi) + d * max(0, -dphi)
+
+This correctly maps contact forces through the kinematic chain
+without KKT conditioning issues.
 
 Reference:
-    Featherstone, R. (2008). Ch. 9: Contact.
-    Marhefka & Orin (1999). IEEE Trans. SMC, 29(6).
+    Khatib, O. (1987). "A unified approach for motion and force
+    control of robot manipulators." IEEE J-RA, 3(1), 43-53.
 """
 
 import numpy as np
@@ -20,20 +25,33 @@ from ..model.kinematics import (
 )
 from ..dynamics.crba import crba
 from ..dynamics.rnea import bias_forces
-from ..dynamics.contact import (
-    contact_force_single, compute_foot_contact_points,
-)
 
 
-def _compute_contact(
+# Contact model parameters (tuned for stability with dt=0.001)
+# Tuned for 65kg robot, 2 feet contact:
+# Equilibrium penetration: mg/(2k) = 659/(2*30000) = 0.011m (11mm)
+# Critical damping: d_cr = 2*sqrt(k*m/2) = 2*sqrt(30000*32.5) = 1975 N*s/m
+CONTACT_K: float = 30000.0     # Normal stiffness [N/m]
+CONTACT_D: float = 2000.0      # Normal damping [N*s/m] (~critical)
+GROUND_Z: float = 0.0
+
+
+def _compute_jacobian_contact(
     model: RobotModel,
     q: NDArray,
     v: NDArray,
     X_world: list[NDArray],
 ) -> tuple[NDArray, float]:
-    """Compute total generalized contact force via Jacobian transpose.
+    """Compute contact generalized force via Jacobian transpose.
 
-    tau_contact = J_c^T * f_c (in generalized coordinates)
+    For each foot in contact:
+        1. Compute foot position and velocity via Jacobian
+        2. Compute contact force in world frame (spring-damper on z)
+        3. Map to generalized force: tau += J_foot^T * f
+
+    Returns:
+        tau_contact: (n_dof,) generalized contact force
+        total_fz: Total vertical contact force [N]
     """
     n_dof = model.n_dof
     tau_contact = np.zeros(n_dof)
@@ -43,29 +61,26 @@ def _compute_contact(
         if fid < 0 or fid >= model.n_bodies:
             continue
 
-        R_foot = X_world[fid][:3, :3]
         p_foot = body_position(X_world[fid])
+        phi = p_foot[2] - GROUND_Z  # Penetration (negative = in contact)
 
-        # Foot Jacobian (6 × n_dof)
-        J_foot = body_jacobian(fid, q, model, X_world)
-        v_foot = J_foot @ v
-        v_foot_lin = v_foot[3:]
-        omega_foot = v_foot[:3]
+        if phi < 0.05:  # Contact or near-contact
+            J_foot = body_jacobian(fid, q, model, X_world)
+            v_foot = J_foot @ v  # (6,) [omega(3), v_lin(3)]
+            vz = v_foot[5]  # z-component of linear velocity
 
-        corners = compute_foot_contact_points(p_foot, R_foot)
+            # Normal force (z-direction)
+            penetration = max(0.0, -phi)
+            f_z = CONTACT_K * penetration + CONTACT_D * max(0.0, -vz)
+            f_z = min(f_z, 3000.0)  # Clamp
 
-        for j in range(4):
-            r = corners[j] - p_foot
-            point_vel = v_foot_lin + np.cross(omega_foot, r)
-            f_world = contact_force_single(corners[j], point_vel)
+            if f_z > 0.0:
+                # World-frame force (only z for ground contact)
+                f_world = np.array([0.0, 0.0, 0.0, 0.0, 0.0, f_z])
 
-            if np.abs(f_world).max() > 0.0:
-                # Jacobian transpose mapping: tau = J^T * f
-                # J for the contact point = J_foot + cross(r) correction
-                # Simplified: use foot Jacobian (accurate enough for foot center)
-                J_point_lin = J_foot[3:, :]  # Linear velocity Jacobian
-                tau_contact += J_point_lin.T @ f_world
-                total_fz += f_world[2]
+                # Map to generalized coordinates via Jacobian transpose
+                tau_contact += J_foot.T @ f_world
+                total_fz += f_z
 
     return tau_contact, total_fz
 
@@ -77,14 +92,13 @@ def run_floating_base_simulation(
     t_final: float = 3.0,
     dt: float = 0.001,
 ) -> dict:
-    """Run floating-base simulation with CRBA/RNEA + contact."""
+    """Run floating-base simulation with Jacobian-transpose contact."""
     n_dof = model.n_dof
     n_steps = int(t_final / dt) + 1
 
     q = q0.copy()
     v = np.zeros(n_dof)
 
-    # Pre-allocate storage
     time_arr = np.linspace(0, t_final, n_steps)
     com_traj = np.empty((n_steps, 3))
     base_traj = np.empty((n_steps, 3))
@@ -93,44 +107,61 @@ def run_floating_base_simulation(
 
     for step in range(n_steps):
         t = time_arr[step]
-
         com_traj[step] = com_position(q, model)
         base_traj[step] = q[:3]
 
-        # Dynamics
         X_world, _ = forward_kinematics(q, model)
         M = crba(model, q)
         h = bias_forces(model, q, v)
 
-        # Contact forces (generalized)
-        tau_contact, fz = _compute_contact(model, q, v, X_world)
+        # Contact forces via Jacobian transpose
+        tau_contact, fz = _compute_jacobian_contact(model, q, v, X_world)
         fz_traj[step] = fz
 
-        # Controller torques
+        # Controller
         tau_ctrl = controller_fn(q, v, t)
         tau_traj[step] = tau_ctrl
 
-        # Total generalized force
+        # Forward dynamics with base rotation constraint
+        # When feet are in contact, constrain base rotation to zero
+        # and horizontal translation to zero (only vertical + joints free)
         tau_total = tau_ctrl + tau_contact - h
 
-        # Forward dynamics: M * ddq = tau_total
-        try:
-            ddq = np.linalg.solve(M, tau_total)
-        except np.linalg.LinAlgError:
+        if fz > 10.0:
+            # Both feet in contact: solve reduced system
+            # Free DOFs: [vz(1), joints(34)] = indices [5, 6:40]
+            # Constrained: [wx,wy,wz,vx,vy] = indices [0:5] → ddq=0
+            free_idx = [5] + list(range(6, n_dof))
+            n_free = len(free_idx)
+            M_red = M[np.ix_(free_idx, free_idx)]
+            rhs_red = tau_total[free_idx]
+
+            try:
+                ddq_red = np.linalg.solve(M_red, rhs_red)
+            except np.linalg.LinAlgError:
+                ddq_red = np.zeros(n_free)
+
             ddq = np.zeros(n_dof)
+            for i, fi in enumerate(free_idx):
+                ddq[fi] = ddq_red[i]
+        else:
+            # Free flight: solve full system
+            try:
+                ddq = np.linalg.solve(M, tau_total)
+            except np.linalg.LinAlgError:
+                ddq = np.zeros(n_dof)
 
         # Clamp accelerations
-        ddq = np.clip(ddq, -500.0, 500.0)
+        ddq = np.clip(ddq, -100.0, 100.0)
 
         # Semi-implicit Euler
-        v_new = v + dt * ddq
-        v_new = np.clip(v_new, -30.0, 30.0)
+        v += dt * ddq
+        v = np.clip(v, -15.0, 15.0)
 
-        # Update base position
-        q[:3] += dt * v_new[:3]
+        q[:3] += dt * v[:3]
 
-        # Update base quaternion
-        omega = v_new[3:6]
+        # Quaternion integration
+        omega = v[3:6]
         w, x, y, z_q = q[3], q[4], q[5], q[6]
         dquat = 0.5 * dt * np.array([
             -omega[0]*x - omega[1]*y - omega[2]*z_q,
@@ -139,18 +170,15 @@ def run_floating_base_simulation(
             omega[2]*w + omega[1]*x - omega[0]*y,
         ])
         q[3:7] += dquat
-        qnorm = np.linalg.norm(q[3:7])
-        if qnorm > 1e-10:
-            q[3:7] /= qnorm
+        qn = np.linalg.norm(q[3:7])
+        if qn > 1e-10:
+            q[3:7] /= qn
 
-        # Update joints
-        q[7:] += dt * v_new[6:]
-        v = v_new
+        q[7:] += dt * v[6:]
 
         if step % max(1, n_steps // 10) == 0:
             c = com_traj[step]
-            print(f"    t={t:5.2f}s: CoM_z={c[2]:.4f}m, Fz={fz:.0f}N, "
-                  f"base_z={q[2]:.4f}")
+            print(f"    t={t:5.2f}s: CoM_z={c[2]:.4f}m, Fz={fz:.0f}N, base_z={q[2]:.4f}")
 
     return {
         "time": time_arr,

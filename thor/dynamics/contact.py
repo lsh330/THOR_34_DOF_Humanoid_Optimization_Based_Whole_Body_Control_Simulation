@@ -28,9 +28,9 @@ from ..core.constants import MU_DEFAULT
 
 
 # Contact model parameters
-CONTACT_STIFFNESS: float = 10000.0    # Normal stiffness [N/m]
-CONTACT_DAMPING: float = 500.0        # Normal damping [N*s/m]
-MAX_CONTACT_FORCE: float = 5000.0     # Max force per point [N]
+CONTACT_STIFFNESS: float = 3000.0     # Normal stiffness [N/m] (soft for stability)
+CONTACT_DAMPING: float = 300.0        # Normal damping [N*s/m] (critical damping ~)
+MAX_CONTACT_FORCE: float = 2000.0     # Max force per point [N]
 STICTION_VEL: float = 0.01            # Stiction velocity threshold [m/s]
 GROUND_Z: float = 0.0                 # Ground plane height [m]
 
