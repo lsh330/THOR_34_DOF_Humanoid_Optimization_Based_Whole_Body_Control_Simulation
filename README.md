@@ -426,11 +426,17 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 - **Bottom-right (CoM Vertical Stability):** Zoomed view of the CoM z-deviation from mean during the steady-state phase (t > 1s). The oscillation amplitude is less than ±3 mm, with a standard deviation of 1.57 mm. This level of stability is comparable to hardware results reported in the literature for torque-controlled humanoids (e.g., Talos: ~5 mm CoM tracking error in Dantec et al. 2021).
 
-### 8.4 Walking Simulation (CI-MPC + LCP)
+### 8.4 Walking Animation
+
+![THOR Walking GIF](docs/images/thor_walking.gif)
+
+**Figure 4.** Animated dual-view of the THOR humanoid during walking simulation (4 steps, 3.4 seconds). The front view (left) shows the leg chains alternately flexing and extending as the robot steps. The side view (right) reveals the sagittal-plane hip/knee/ankle coordination: during the swing phase, the hip flexes forward while the knee bends to clear the ground, then both extend for touchdown. The gait phase is displayed in the title overlay (DS = double support, L/R Swing = left/right leg swing). The CoM height oscillation (~2 cm per step) is visible in the body center movement.
+
+### 8.5 Walking Dynamics Analysis
 
 ![Walking Analysis](docs/images/walking_analysis.png)
 
-**Figure 4.** Walking simulation analysis with Contact-Implicit MPC and LCP contact resolution (4 steps, 3.4 seconds).
+**Figure 5.** Four-panel walking dynamics analysis with Contact-Implicit MPC and LCP contact resolution (4 steps, 3.4 seconds).
 
 - **Top-left (CoM Vertical During Walking):** The CoM height oscillates between 0.88 m and 1.00 m as the robot executes alternating swing phases. The colored background bands indicate gait phases: blue = initial double support, green = left leg swing, yellow = double support transition, red = right leg swing. The 2-3 cm CoM height variation per step is characteristic of bipedal walking where the CoM rises during mid-stance (inverted pendulum phase) and drops during double support transitions. The overall stability (no divergence over 4 steps) confirms that the CI-MPC framework successfully coordinates the swing foot trajectory with balance maintenance.
 
@@ -440,7 +446,43 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 - **Bottom-right (Active Contacts):** Both feet maintain contact throughout (n=2). In the current implementation, the constrained-base formulation keeps both feet near ground. A fully unconstrained floating-base walking simulation would show contact transitions (2→1→2→1→...) corresponding to the gait cycle.
 
-### 8.5 Performance Summary
+### 8.6 Joint Trajectories During Walking
+
+![Joint Trajectories](docs/images/walking_joint_trajectories.png)
+
+**Figure 6.** Leg joint angle trajectories during the 4-step walking simulation. Each panel shows one joint degree of freedom with left (solid blue) and right (dashed red) legs overlaid.
+
+- **hip_y (Yaw):** Remains near zero for both legs — no rotation about the vertical axis during sagittal-plane walking. This confirms the gait remains in the sagittal plane without yaw disturbance.
+
+- **hip_r (Roll):** Minimal lateral motion (<1 degree), consistent with a planar walking gait. A full 3D walking controller would produce ~3-5 degrees of hip roll for lateral weight shifting.
+
+- **hip_p (Pitch):** The most dynamic joint during walking. The swing leg hip flexes to -30 to -60 degrees (forward swing), then extends back. The alternating pattern between left and right legs shows the expected 180-degree phase offset of bipedal gait. The ~30-degree swing amplitude is consistent with human walking kinematics at low speed.
+
+- **kn_p (Knee Pitch):** Knee flexion increases to 60-90 degrees during swing to clear the foot from the ground (foot clearance), then extends before touchdown. The swing-phase knee flexion (sinusoidal profile) follows the cubic polynomial trajectory programmed in the walking controller.
+
+- **an_p (Ankle Pitch):** Ankle dorsiflexion (-15 to -20 degrees) during swing, transitioning to slight plantarflexion at stance. The ankle trajectory compensates for hip and knee angles to maintain the foot approximately parallel to the ground during swing.
+
+- **an_r (Ankle Roll):** Near zero throughout — no lateral ankle motion in sagittal walking. This degree of freedom becomes active in 3D walking for terrain adaptation.
+
+### 8.7 CoM Trajectory Analysis
+
+![CoM Trajectory](docs/images/com_trajectory_walking.png)
+
+**Figure 7.** Center of mass trajectory projected onto the x-z (sagittal) plane during walking. Color encodes time progression (dark purple = start, bright yellow = end). The trajectory shows characteristic features of bipedal walking: vertical oscillation of ~2 cm per step cycle (CoM rises during mid-stance as the inverted pendulum sweeps over the stance foot, then drops during double support transitions). The forward progression along x is minimal in this stepping simulation, but the vertical oscillation pattern is clearly visible and physically correct.
+
+### 8.8 Mass Matrix Structure
+
+![Mass Matrix](docs/images/mass_matrix_analysis.png)
+
+**Figure 8.** Analysis of the 40x40 joint-space inertia matrix M(q) computed by the Composite Rigid Body Algorithm.
+
+- **Left (Heatmap):** Logarithmic magnitude of M entries. The 6x6 upper-left block (floating base) shows the strongest coupling. The block-diagonal structure along the main diagonal reflects the kinematic tree branching: arms and legs form semi-independent subtrees with weak inter-branch coupling. The off-diagonal bands represent the base-joint coupling (M_bj) that was the source of the floating-base integration instability, resolved via base rotation constraint.
+
+- **Center (Eigenvalue Spectrum):** The eigenvalues span approximately 4 orders of magnitude (condition number ~10^4), which is typical for humanoid inertia matrices. The smallest eigenvalues correspond to the lightest distal bodies (grippers, head), while the largest correspond to the collective translational mass (67.2 kg). The condition number determines the stiffness of the ODE system and limits the maximum stable explicit integration timestep.
+
+- **Right (Diagonal Elements):** The diagonal of M shows three distinct groups: (1) base rotational inertias (wx,wy,wz: 2-20 kg-m^2), (2) base translational mass (vx,vy,vz: 67.2 kg each — exactly the total robot mass, confirming CRBA correctness), (3) joint effective inertias (0.001-5 kg-m^2, varying by joint location in the kinematic tree).
+
+### 8.9 Performance Summary
 
 | Metric | Standing (CI-MPC) | Walking |
 |:---|:---|:---|
