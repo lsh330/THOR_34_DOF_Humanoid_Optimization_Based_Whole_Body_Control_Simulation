@@ -75,8 +75,11 @@ def contact_implicit_step(
 
     # Free velocity (no contact): v_free = v + h * M^{-1} * (tau - bias)
     M_reg = M + 1e-8 * np.eye(n_dof)
+    # Cholesky decomposition (2x faster than LU for SPD matrices)
+    from scipy.linalg import cho_factor, cho_solve
     try:
-        M_inv_f = np.linalg.solve(M_reg, tau - bias)
+        cho = cho_factor(M_reg)
+        M_inv_f = cho_solve(cho, tau - bias)
     except np.linalg.LinAlgError:
         M_inv_f = np.zeros(n_dof)
 
@@ -123,9 +126,13 @@ def contact_implicit_step(
 
     # Delassus matrix: A = J_c * M^{-1} * J_c^T
     try:
-        M_inv_JcT = np.linalg.solve(M_reg, J_c.T)
-    except np.linalg.LinAlgError:
-        M_inv_JcT = np.zeros((n_dof, n_contacts))
+        M_inv_JcT = cho_solve(cho, J_c.T)  # Reuse Cholesky factorization
+    except (np.linalg.LinAlgError, NameError):
+        try:
+            cho = cho_factor(M_reg)
+            M_inv_JcT = cho_solve(cho, J_c.T)
+        except np.linalg.LinAlgError:
+            M_inv_JcT = np.zeros((n_dof, n_contacts))
 
     A = J_c @ M_inv_JcT  # (n_contacts, n_contacts)
 
