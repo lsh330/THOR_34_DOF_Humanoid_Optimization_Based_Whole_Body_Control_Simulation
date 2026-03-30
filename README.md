@@ -584,44 +584,55 @@ This is verified for random accelerations with tolerance 1e-6, confirming both t
 ## 11. Project Structure
 
 ```
-thor/                          ~3,500 lines of code
+thor/                              ~5,000 LOC, 30+ source files
  |
- +-- core/                     Spatial algebra, constants
- |    +-- spatial.py           Featherstone 6D (transforms, inertia, cross products)
- |    +-- constants.py         Physical constants, THOR robot specs
+ +-- core/
+ |    +-- constants.py             Physical constants, THOR specs
+ |    +-- spatial/                 Featherstone spatial algebra (5 modules)
+ |         +-- rotation.py         skew, rot_x/y/z
+ |         +-- transform.py        spatial_transform, inverse
+ |         +-- inertia.py          spatial_inertia (6x6 SPD)
+ |         +-- cross_product.py    spatial_cross_motion/force
+ |         +-- motion_subspace.py  revolute/prismatic subspace
  |
- +-- model/                    34-DOF robot definition
- |    +-- robot_model.py       Kinematic tree (35 bodies, parent array, mass/inertia)
- |    +-- kinematics.py        FK, body Jacobian, CoM computation
- |    +-- joint_types.py       Joint type enumeration (revolute X/Y/Z, floating)
+ +-- model/
+ |    +-- link.py                  LinkData dataclass (SRP)
+ |    +-- joint_types.py           Joint type enumeration
+ |    +-- robot_model.py           34-DOF kinematic tree builder
+ |    +-- kinematics.py            FK, body Jacobian, CoM
+ |    +-- quaternion.py            Quaternion operations, integration
  |
- +-- dynamics/                 O(N) recursive algorithms
- |    +-- rnea.py              Recursive Newton-Euler: O(N) inverse dynamics
- |    +-- crba.py              Composite Rigid Body: O(Nd) mass matrix
- |    +-- aba.py               Articulated Body: O(N) forward dynamics
- |    +-- centroidal.py        Centroidal Momentum Matrix (Orin 2013)
- |    +-- contact.py           Spring-Damper contact model (Marhefka & Orin 1999)
- |    +-- contact_implicit.py  LCP-based Stewart-Trinkle time-stepping
+ +-- dynamics/
+ |    +-- rnea.py                  Recursive Newton-Euler: O(N) ID
+ |    +-- crba.py                  Composite Rigid Body: O(Nd) M(q)
+ |    +-- aba.py                   Articulated Body: O(N) FD
+ |    +-- centroidal.py            Centroidal Momentum Matrix
+ |    +-- contact.py               Spring-Damper contact model
+ |    +-- contact_implicit.py      LCP Stewart-Trinkle time-stepping
  |
- +-- optimization/             Numerical solvers
- |    +-- lcp_solver.py        Fischer-Burmeister Newton + Interior-Point LCP
+ +-- optimization/
+ |    +-- lcp_solver.py            FB-Newton + Interior-Point LCP
  |
- +-- control/                  4-layer hierarchy + CI-MPC
- |    +-- contact_implicit_mpc.py   CI-MPC (Le Cleac'h et al. 2024)
- |    +-- contact_planner.py        Gait pattern generation
- |    +-- centroidal_lqr.py         LIPM-based CoM control
- |    +-- whole_body_qp.py          Weighted QP inverse dynamics
- |    +-- joint_pd.py               Joint PD + gravity compensation
+ +-- control/
+ |    +-- contact_implicit_mpc.py  CI-MPC (Le Cleac'h 2024)
+ |    +-- walking_controller.py    Biomechanical walking orchestrator
+ |    +-- contact_planner.py       Gait schedule generation
+ |    +-- centroidal_lqr.py        LIPM-based CoM LQR
+ |    +-- whole_body_qp.py         Weighted QP inverse dynamics
+ |    +-- joint_pd.py              Joint PD + gravity compensation
+ |    +-- gait/                    Gait subpackage
+ |         +-- phase_detector.py   Gait phase detection
+ |         +-- swing_trajectory.py Biomechanical swing/stance profiles
  |
- +-- simulation/               Simulation scenarios
- |    +-- standing.py           Static standing configuration
- |    +-- runner.py             Floating-base runner (Jacobian-transpose contact)
+ +-- simulation/
+ |    +-- standing.py              Static standing configuration
+ |    +-- runner.py                Floating-base simulation engine
  |
- +-- visualization/            Publication-quality outputs
- |    +-- stick_figure.py       2D robot rendering, GIF animation
- |    +-- plots.py              Analysis figures
+ +-- visualization/
+ |    +-- stick_figure.py          2D robot renderer + GIF animation
+ |    +-- plots.py                 Analysis figures
  |
- +-- tests/                    13 tests, 0.45s
+ +-- tests/                        58 tests, 0.94s
       +-- test_dynamics.py      Model, kinematics, gravity, mass matrix, standing
 ```
 
