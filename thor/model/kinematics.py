@@ -28,14 +28,7 @@ from .robot_model import RobotModel
 from .joint_types import JointType
 
 
-def quat_to_rot(quat: NDArray) -> NDArray:
-    """Convert quaternion [w, x, y, z] to 3×3 rotation matrix."""
-    w, x, y, z = quat
-    return np.array([
-        [1 - 2*(y*y + z*z), 2*(x*y - w*z),     2*(x*z + w*y)],
-        [2*(x*y + w*z),     1 - 2*(x*x + z*z), 2*(y*z - w*x)],
-        [2*(x*z - w*y),     2*(y*z + w*x),     1 - 2*(x*x + y*y)],
-    ])
+from .quaternion import quat_to_rot  # noqa: E402 — re-exported for compatibility
 
 
 def joint_transform(link_idx: int, q_joint: float,

@@ -21,31 +21,13 @@ Reference:
     THORMANG3 URDF: github.com/ROBOTIS-GIT/ROBOTIS-THORMANG-Common
 """
 
-from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
 from .joint_types import JointType
-
-
-@dataclass(slots=True)
-class LinkData:
-    """Single rigid body (link) in the kinematic tree."""
-    name: str
-    mass: float                          # [kg]
-    com: NDArray = field(default_factory=lambda: np.zeros(3))  # CoM in body frame [m]
-    inertia: NDArray = field(default_factory=lambda: np.eye(3) * 0.001)  # 3×3 inertia at CoM
-    parent_id: int = -1                  # Parent body index (-1 = world)
-    joint_type: JointType = JointType.FIXED
-    joint_axis: int = 2                  # 0=x, 1=y, 2=z (for revolute)
-    joint_offset: NDArray = field(default_factory=lambda: np.zeros(3))  # Translation from parent
-    joint_rotation: NDArray = field(default_factory=lambda: np.eye(3))  # Rotation from parent (at q=0)
-    q_min: float = -np.pi               # Joint limit [rad]
-    q_max: float = np.pi
-    tau_max: float = 100.0              # Max torque [N*m]
-    is_actuated: bool = True
+from .link import LinkData
 
 
 def _inertia_box(m: float, dx: float, dy: float, dz: float) -> NDArray:
