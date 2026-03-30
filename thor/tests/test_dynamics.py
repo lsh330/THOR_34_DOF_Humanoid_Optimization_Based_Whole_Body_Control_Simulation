@@ -42,7 +42,7 @@ class TestKinematics:
     def test_base_position(self, q_standing, model):
         X_world, _ = forward_kinematics(q_standing, model)
         p = body_position(X_world[0])
-        assert abs(p[2] - 0.85) < 0.01  # Base at 0.85m
+        assert abs(p[2] - 1.02) < 0.01  # Base at 1.02m
 
     def test_com_positive_z(self, q_standing, model):
         com = com_position(q_standing, model)

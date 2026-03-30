@@ -26,19 +26,19 @@ def default_standing_config(model: RobotModel) -> NDArray:
     """Generate default standing configuration."""
     n_joints = model.n_bodies - 1
     q = np.zeros(7 + n_joints)
-    q[2] = 0.85    # Base height
+    q[2] = 1.02    # Base height (feet ~at ground level, slight penetration)
     q[3] = 1.0     # Quaternion w = 1
 
     # Slight knee bend for natural posture
     # l_leg: hip_p(20), kn_p(21), an_p(22)
-    q[7 + 20] = -0.25
-    q[7 + 21] = 0.5
-    q[7 + 22] = -0.25
+    q[7 + 20] = -0.3
+    q[7 + 21] = 0.6
+    q[7 + 22] = -0.3
 
     # r_leg: hip_p(26), kn_p(27), an_p(28)
-    q[7 + 26] = -0.25
-    q[7 + 27] = 0.5
-    q[7 + 28] = -0.25
+    q[7 + 26] = -0.3
+    q[7 + 27] = 0.6
+    q[7 + 28] = -0.3
 
     return q
 
