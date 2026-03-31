@@ -211,10 +211,10 @@ The bias force vector decomposes as:
 \mathbf{h}(\mathbf{q}, \mathbf{v}) = C(\mathbf{q}, \mathbf{v})\mathbf{v} + \mathbf{g}(\mathbf{q})
 ```
 
-where C(**q**,**v**)**v** contains Coriolis and centrifugal terms, and **g**(**q**) is the gravity vector. Both are computed efficiently via RNEA:
+where $C(\mathbf{q},\mathbf{v})\mathbf{v}$ contains Coriolis and centrifugal terms, and $\mathbf{g}(\mathbf{q})$ is the gravity vector. Both are computed efficiently via RNEA:
 
-- **g**(**q**) = RNEA(**q**, **0**, **0**) — gravity alone
-- **h**(**q**, **v**) = RNEA(**q**, **v**, **0**) — full bias
+- $\mathbf{g}(\mathbf{q}) = \text{RNEA}(\mathbf{q}, \mathbf{0}, \mathbf{0})$ — gravity alone
+- $\mathbf{h}(\mathbf{q}, \mathbf{v}) = \text{RNEA}(\mathbf{q}, \mathbf{v}, \mathbf{0})$ — full bias
 
 ---
 
@@ -292,7 +292,7 @@ M_{ij} = S_j^T \mathbf{F}_i \qquad \text{(off-diagonal: coupling, } \mathbf{F}_i
 
 ### 5.3 Centroidal Momentum Matrix (Orin et al. 2013)
 
-The centroidal momentum **h**_G relates the full-body velocity to the 6D momentum at the center of mass:
+The centroidal momentum $\mathbf{h}_G$ relates the full-body velocity to the 6D momentum at the center of mass:
 
 ```math
 \mathbf{h}_G = A_G(\mathbf{q})\mathbf{v} = \begin{bmatrix} \mathbf{k}_G \\ \mathbf{l}_G \end{bmatrix}
