@@ -587,7 +587,7 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ![Walking Analysis](docs/images/walking_analysis.png)
 
-**Figure 5.** Four-panel walking dynamics analysis with Contact-Implicit MPC and LCP contact resolution (4 steps, 3.4 seconds).
+**Figure 5.** Four-panel walking dynamics analysis with Computed Torque Control + Contact-Implicit dynamics (6 steps, 5.1 seconds, 0.95m forward progression).
 
 - **Top-left (CoM Vertical During Walking):** The CoM height oscillates between 0.88 m and 1.00 m as the robot executes alternating swing phases. The colored background bands indicate gait phases: blue = initial double support, green = left leg swing, yellow = double support transition, red = right leg swing. The 2-3 cm CoM height variation per step is characteristic of bipedal walking where the CoM rises during mid-stance (inverted pendulum phase) and drops during double support transitions. The overall stability (no divergence over 4 steps) confirms that the CI-MPC framework successfully coordinates the swing foot trajectory with balance maintenance.
 
@@ -656,7 +656,10 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 | Hip pitch range | 0 | **-5 to +20.5 deg** (Winter 1991) |
 | Knee swing flexion | 0 | **+36.5 deg** (biomechanical) |
 | Control method | CI-MPC + LCP | **Computed Torque Control** |
-| Simulation speed | 114 steps/s | ~180 steps/s |
+| Simulation speed | 114 steps/s | **250 steps/s** (4.01ms/step) |
+| CRBA timing | 1.61 ms | 1.61 ms |
+| RNEA timing | 1.81 ms | 1.81 ms |
+| LCP timing | 0.15 ms | 0.15 ms |
 
 | Dynamics Verification | Result |
 |:---|:---|
