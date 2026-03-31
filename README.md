@@ -17,7 +17,7 @@ A from-scratch Python implementation of **Contact-Implicit Model Predictive Cont
 5. [O(N) Dynamics Algorithms](#5-on-dynamics-algorithms)
 6. [Contact-Implicit Dynamics via LCP](#6-contact-implicit-dynamics-via-lcp)
 7. [Contact-Implicit MPC](#7-contact-implicit-mpc)
-8. [Computed Torque Control for Walking](#8-computed-torque-control-for-walking)
+8. [Walking Control: Schur Complement + Computed Torque](#8-walking-control-schur-complement--computed-torque)
 9. [Simulation Results](#9-simulation-results)
 10. [Control Architecture](#10-control-architecture)
 11. [Testing](#11-testing)
@@ -447,7 +447,7 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 ---
 
-## 8. Computed Torque Control for Walking
+## 8. Walking Control: Schur Complement + Computed Torque
 
 ### 8.1 The Tracking Problem
 
