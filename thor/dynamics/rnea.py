@@ -77,7 +77,8 @@ def rnea(
     vel = [np.zeros(6) for _ in range(n)]
     acc = [np.zeros(6) for _ in range(n)]
     f = [np.zeros(6) for _ in range(n)]
-    X_up = [np.eye(6) for _ in range(n)]
+    _eye6 = np.eye(6)
+    X_up = [_eye6.copy() for _ in range(n)]
 
     # Use cached spatial inertias from model (no recomputation)
     I_s = model.spatial_inertias

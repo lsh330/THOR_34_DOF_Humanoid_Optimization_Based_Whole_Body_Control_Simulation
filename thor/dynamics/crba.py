@@ -42,7 +42,8 @@ def crba(model: RobotModel, q: NDArray) -> NDArray:
     q_joints = q[7:]
 
     # Precompute transforms and spatial inertias
-    X_up = [np.eye(6) for _ in range(n)]
+    _eye6 = np.eye(6)
+    X_up = [_eye6.copy() for _ in range(n)]
     I_c = []  # Composite inertias (mutable copies)
 
     for i in range(n):
