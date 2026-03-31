@@ -869,7 +869,7 @@ This is verified at **10 random configurations** (parametrized test) with random
 
 ![Test Evidence](docs/images/test_evidence.png)
 
-**Figure 14.** Comprehensive test evidence across all 104 tests, organized into 4 categories (12 panels):
+**Figure 14.** Comprehensive test evidence across all 137 tests, organized into 4 categories (12 panels):
 
 **Row 1 — Spatial Algebra:** (a) Rotation matrix determinant = 1 for all angles (rot_x, rot_y, rot_z). (b) Skew-symmetric matrix antisymmetry ||S+S^T|| = 0 (100 random vectors). (c) Spatial inertia minimum eigenvalue > 0 (positive-definiteness, 50 random configs).
 
