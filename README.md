@@ -649,10 +649,10 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ```bash
 $ python -m pytest thor/tests/ -v
-========================= 86 passed in 1.60s =========================
+========================= 100 passed in 2.29s =========================
 ```
 
-### 11.1 Test Suite Overview (86 tests across 8 modules)
+### 11.1 Test Suite Overview (100 tests across 10 modules)
 
 | Module | Tests | Validates |
 |:---|---:|:---|
