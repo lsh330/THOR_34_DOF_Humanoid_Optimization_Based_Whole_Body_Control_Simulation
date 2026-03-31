@@ -929,6 +929,45 @@ print(f'CoM stability: {result[\"com\"][len(result[\"com\"])//2:, 2].std()*1000:
 "
 ```
 
+### Walking Simulation
+
+```python
+from thor.model.robot_model import RobotModel
+from thor.dynamics.contact_implicit import run_contact_implicit_simulation
+from thor.simulation.standing import default_standing_config
+from thor.control.walking_controller import WalkingController
+
+model = RobotModel()
+q0 = default_standing_config(model)
+walker = WalkingController(model, q0, n_steps=6)
+result = run_contact_implicit_simulation(
+    model, q0, walker.compute, t_final=walker.total_duration)
+print(f"Forward: {result['q'][-1, 0]:.2f}m in {walker.total_duration:.1f}s")
+```
+
+### Performance Benchmark
+
+```python
+import time
+from thor.dynamics.crba import crba
+from thor.dynamics.rnea import bias_forces
+import numpy as np
+
+model = RobotModel()
+q = default_standing_config(model)
+v = np.zeros(model.n_dof)
+
+# Warm up
+crba(model, q); bias_forces(model, q, v)
+
+# Benchmark
+t0 = time.perf_counter()
+for _ in range(100):
+    M = crba(model, q)
+    h = bias_forces(model, q, v)
+print(f"CRBA+RNEA: {(time.perf_counter()-t0)/100*1000:.2f} ms/call")
+```
+
 ---
 
 ## 14. References
