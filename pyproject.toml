@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thor-wbc-sim"
+version = "1.0.0"
+description = "Contact-Implicit MPC Whole-Body Control for the THOR 34-DOF Humanoid"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Sanghoon Lee"},
+]
+keywords = [
+    "humanoid", "robotics", "whole-body-control", "contact-implicit",
+    "model-predictive-control", "LCP", "featherstone", "dynamics",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy>=1.24,<2.1",
+    "scipy>=1.10,<1.15",
+    "matplotlib>=3.6,<3.10",
+    "pillow>=9.0,<11.0",
+    "pyyaml>=6.0,<7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0,<9.0",
+    "pytest-cov>=4.0,<6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["thor/tests"]
