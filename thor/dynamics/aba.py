@@ -70,8 +70,7 @@ def aba(
     IA = []                                     # Articulated inertia
 
     for i in range(n):
-        link = model.links[i]
-        IA.append(spatial_inertia(link.mass, link.com, link.inertia))
+        IA.append(model.spatial_inertias[i].copy())  # Cached, copy for mutation
 
     # === Pass 1: Velocity propagation (base → tips) ===
 
