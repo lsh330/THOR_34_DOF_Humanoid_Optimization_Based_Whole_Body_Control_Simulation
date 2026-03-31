@@ -301,7 +301,13 @@ This 6D equation governs the overall balance of the robot — it is the foundati
 
 ### 6.1 The Contact Problem
 
-When the robot's feet touch the ground, **contact forces** arise that prevent interpenetration. The key challenge: we don't know *a priori* which contacts are active. Contact-implicit methods solve this automatically via complementarity.
+When the robot's feet touch the ground, **contact forces** arise that prevent interpenetration. The key challenge: we don't know *a priori* which contacts are active — during walking, contacts switch between double support (both feet), single support (one foot), and brief flight phases. Traditional approaches require enumerating all possible contact modes (exponential in the number of contact points). Contact-implicit methods bypass this entirely by embedding the contact resolution inside the dynamics solver via **Linear Complementarity Problems (LCP)**, which automatically discover active contacts at each time step.
+
+Our implementation uses the **Stewart-Trinkle** velocity-level time-stepping scheme (1996), which:
+1. Handles simultaneous impacts and persistent contacts
+2. Produces unique solutions for positive semi-definite Delassus matrices
+3. Is compatible with Coulomb friction (via polyhedral approximation)
+4. Avoids the need for event detection or mode switching logic
 
 ### 6.2 Stewart-Trinkle Time-Stepping
 
