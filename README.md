@@ -1021,6 +1021,20 @@ for _ in range(100):
 print(f"CRBA+RNEA: {(time.perf_counter()-t0)/100*1000:.2f} ms/call")
 ```
 
+### Generate Walking GIF
+
+```python
+from thor.visualization.stick_figure import generate_standing_gif
+from thor.model.robot_model import RobotModel
+
+model = RobotModel()
+# Run walking first (see Walking Simulation above), then:
+import numpy as np
+data = np.load("output/data/walking_traj.npz")
+result = {"time": data["time"], "q": data["q"], "com": data["com"]}
+generate_standing_gif(result, model, output_dir="output/gifs", fps=20)
+```
+
 ---
 
 ## 14. Implementation Challenges and Solutions
