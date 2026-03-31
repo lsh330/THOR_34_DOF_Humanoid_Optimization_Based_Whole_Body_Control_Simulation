@@ -163,7 +163,7 @@ The term `m[c]_x [c]_x^T` is the **parallel axis theorem** in spatial form: it s
 
 ### 4.1 Floating-Base Manipulator Equation
 
-For a floating-base robot with n_v generalized velocity DOF:
+For a floating-base robot with $n_v$ generalized velocity DOF:
 
 ```math
 M(\mathbf{q})\dot{\mathbf{v}} + \mathbf{h}(\mathbf{q}, \mathbf{v}) = S^T\boldsymbol{\tau} + J_c^T\mathbf{f}_c
