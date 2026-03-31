@@ -649,18 +649,22 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ```bash
 $ python -m pytest thor/tests/ -v
-========================= 58 passed in 0.87s =========================
+========================= 86 passed in 1.60s =========================
 ```
 
-### 10.1 Test Suite Overview (58 tests across 5 modules)
+### 11.1 Test Suite Overview (86 tests across 8 modules)
 
 | Module | Tests | Validates |
 |:---|---:|:---|
 | `test_spatial.py` | 20 | Rotation (identity, orthogonality, det=1, composition), skew (antisymmetry, cross product, roundtrip), spatial transform (identity, inverse), spatial inertia (SPD, zero-CoM), cross products, motion subspace |
 | `test_dynamics.py` | 13 | Robot model (35 bodies, 40 DOF, 67.2 kg), FK (base pos, CoM), gravity (mg=659N), mass matrix (symmetric, PD, 40x40), standing (zero accel) |
-| `test_algorithms.py` | 10 | **CRBA-RNEA cross-validation** (M*ddq+h = RNEA(q,0,ddq) to 1e-6), gravity=bias at zero vel, centroidal momentum direction, M translational diagonal = m*I_3, M SPD at 5 random configs, condition number < 1e7, free-fall energy conservation (<5%) |
-| `test_lcp.py` | 6 | Trivial solution (q>=0), 2x2 analytical, complementarity z*w=0, contact Delassus, IP vs FB-Newton cross-validation, 4x4 random SPD |
-| `test_walking.py` | 9 | Swing start/end boundary, mid-swing knee flexion (>30 deg), hip range (-15 to +35 deg biomechanical), knee range (0-60 deg), ankle range (-25 to +20 deg), stance trajectory, phase detection, torque limits |
+| `test_algorithms.py` | 10 | CRBA-RNEA cross-validation, gravity=bias, centroidal momentum, M translational diagonal, M SPD, condition number, energy conservation |
+| `test_crba_rnea_cross.py` | 11 | **M*ddq+h = RNEA at 10 random configs** (parametrized, atol=1e-4), M SPD at 5 random configs |
+| `test_lcp.py` | 6 | Trivial solution, 2x2 analytical, complementarity, Delassus, IP vs FB-Newton, random SPD |
+| `test_walking.py` | 9 | Swing/stance boundaries, biomechanical ranges (hip/knee/ankle), phase detection, torque limits |
+| `test_quaternion.py` | 7 | Identity, orthogonality, determinant, 90deg rotation, zero-omega, normalization, small rotation |
+| `test_contact.py` | 6 | No-contact above ground, force proportional, damping, friction, no adhesion, CI stability |
+| `test_jacobian.py` | 4 | Numerical Jacobian verification, pelvis structure, shape, CoM bounds |
 
 ### 10.2 Key Cross-Validation: CRBA vs RNEA
 
