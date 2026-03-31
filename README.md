@@ -580,7 +580,13 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 - **Right (Diagonal Elements):** The diagonal of M shows three distinct groups: (1) base rotational inertias (wx,wy,wz: 2-20 kg-m^2), (2) base translational mass (vx,vy,vz: 67.2 kg each — exactly the total robot mass, confirming CRBA correctness), (3) joint effective inertias (0.001-5 kg-m^2, varying by joint location in the kinematic tree).
 
-### 8.9 Performance Summary
+### 9.9 Energy Conservation Verification
+
+![Energy Conservation](docs/images/energy_conservation.png)
+
+**Figure 9.** Energy conservation during free fall (500 ms, dt=1ms, no control). Left: KE/PE/Total decomposition showing energy exchange during acceleration under gravity. Right: Energy drift percentage — bounded within acceptable limits for semi-implicit Euler, confirming numerical stability of the 40-DOF integrator.
+
+### 9.10 Performance Summary
 
 | Metric | Standing (CI-MPC) | Walking (CTC) |
 |:---|:---|:---|
@@ -770,6 +776,9 @@ print(f'CoM stability: {result[\"com\"][len(result[\"com\"])//2:, 2].std()*1000:
 10. Meduri, A. et al. (2023). "BiConMP: A Nonlinear MPC Framework for Whole Body Motion Planning." *IEEE TRO*, 39(2), 905-922.
 11. Marhefka, D.W. & Orin, D.E. (1999). "A Compliant Contact Model with Nonlinear Damping." *IEEE Trans. SMC*, 29(6), 566-572.
 12. Kajita, S. et al. (2003). "Biped Walking Pattern Generation by Preview Control of ZMP." *ICRA*.
+13. Spong, M.W., Hutchinson, S. & Vidyasagar, M. (2005). *Robot Modeling and Control*. Wiley.
+14. Winter, D.A. (1991). *Biomechanics and Motor Control of Human Movement*. Wiley.
+15. Luh, J.Y.S., Walker, M.W. & Paul, R.P.C. (1980). "On-Line Computational Scheme for Mechanical Manipulators." *ASME J. Dyn. Sys.*, 102(2), 69-76.
 
 ---
 
