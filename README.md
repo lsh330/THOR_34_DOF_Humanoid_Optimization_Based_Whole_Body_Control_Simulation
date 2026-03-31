@@ -608,7 +608,7 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 | LCP solver | FB-Newton, ~5 iterations, residual < 1e-6 |
 | Cholesky speedup | **37% faster** than LU solve |
 | CRBA-RNEA max error | **2.27 × 10⁻¹³ N·m** (machine epsilon) |
-| Tests | **100/100 passing** (2.29 s, 10 modules) |
+| Tests | **104/104 passing** (2.29 s, 10 modules) |
 
 ---
 
@@ -650,10 +650,10 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ```bash
 $ python -m pytest thor/tests/ -v
-========================= 100 passed in 2.29s =========================
+========================= 104 passed in 1.77s =========================
 ```
 
-### 11.1 Test Suite Overview (100 tests across 10 modules)
+### 11.1 Test Suite Overview (104 tests across 11 modules)
 
 | Module | Tests | Validates |
 |:---|---:|:---|
@@ -663,6 +663,7 @@ $ python -m pytest thor/tests/ -v
 | `test_crba_rnea_cross.py` | 11 | **M*ddq+h = RNEA at 10 random configs** (parametrized, atol=1e-4), M SPD at 5 random configs |
 | `test_lcp.py` | 6 | Trivial solution, 2x2 analytical, complementarity, Delassus, IP vs FB-Newton, random SPD |
 | `test_walking.py` | 9 | Swing/stance boundaries, biomechanical ranges (hip/knee/ankle), phase detection, torque limits |
+| `test_performance.py` | 4 | CRBA < 50ms, RNEA < 50ms, LCP < 5ms, full step < 20ms |
 | `test_quaternion.py` | 7 | Identity, orthogonality, determinant, 90deg rotation, zero-omega, normalization, small rotation |
 | `test_contact.py` | 6 | No-contact above ground, force proportional, damping, friction, no adhesion, CI stability |
 | `test_jacobian.py` | 4 | Numerical Jacobian verification, pelvis structure, shape, CoM bounds |
@@ -734,7 +735,7 @@ thor/                              ~5,000 LOC, 30+ source files
  |    +-- stick_figure.py          2D robot renderer + GIF animation
  |    +-- plots.py                 Analysis figures
  |
- +-- tests/                        100 tests, 2.29s (10 modules)
+ +-- tests/                        104 tests, 1.77s (11 modules)
       +-- test_spatial.py          Rotation, transform, inertia (20)
       +-- test_dynamics.py         Model, FK, gravity, M(q) (13)
       +-- test_crba_rnea_cross.py  10-config cross-validation (11)
