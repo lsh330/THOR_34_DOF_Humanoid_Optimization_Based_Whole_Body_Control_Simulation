@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-13%20passed-brightgreen.svg)](#10-testing)
+[![Tests](https://img.shields.io/badge/tests-137%20passed-brightgreen.svg)](#11-testing)
 
 A from-scratch Python implementation of **Contact-Implicit Model Predictive Control** with **LCP-based contact dynamics** and **Featherstone's O(N) rigid body dynamics** for the **THOR 34-DOF humanoid robot**. Every equation of motion, every dynamics algorithm, and every optimization solver is implemented from first principles — no Pinocchio, no Drake, no MuJoCo.
 
