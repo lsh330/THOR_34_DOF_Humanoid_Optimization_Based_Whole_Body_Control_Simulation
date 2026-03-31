@@ -169,9 +169,10 @@ where each term is:
 
 The mass matrix has a 2x2 block structure separating the floating base (b) and joints (j):
 
-```
-M = [ M_bb  M_bj ]     h = [ h_b ]     S^T tau = [ 0   ]
-    [ M_jb  M_jj ]         [ h_j ]                [ tau ]
+```math
+M = \begin{bmatrix} M_{bb} & M_{bj} \\ M_{jb} & M_{jj} \end{bmatrix}, \quad
+\mathbf{h} = \begin{bmatrix} \mathbf{h}_b \\ \mathbf{h}_j \end{bmatrix}, \quad
+S^T\boldsymbol{\tau} = \begin{bmatrix} \mathbf{0}_6 \\ \boldsymbol{\tau} \end{bmatrix}
 ```
 
 The floating base is **unactuated** (no motors at the pelvis). Ground reaction forces J_c^T f_c provide the necessary base forces for balance.
@@ -199,26 +200,35 @@ RNEA computes inverse dynamics tau = ID(**q**, **v**, **a**) in O(N) time via tw
 
 **Forward Pass** (base to tips): propagate velocities and accelerations.
 
-For each body i with parent lambda(i):
+For each body $i$ with parent $\lambda(i)$:
 
-```
-v_i    = X_i * v_{lambda(i)} + S_i * dq_i          (velocity propagation)
-a_i    = X_i * a_{lambda(i)} + S_i * ddq_i + v_i x (S_i * dq_i)   (acceleration)
-```
-
-where X_i is the spatial transform from parent to body i, and S_i is the motion subspace (rotation axis for revolute joints).
-
-**Backward Pass** (tips to base): accumulate forces.
-
-```
-f_i          = I_i * a_i + v_i x* (I_i * v_i)      (Newton-Euler equation)
-f_{lambda(i)} += X_i^T * f_i                         (force propagation to parent)
-tau_i        = S_i^T * f_i                            (joint torque extraction)
+```math
+\mathbf{v}_i = {}^iX_{\lambda(i)} \mathbf{v}_{\lambda(i)} + S_i \dot{q}_i
 ```
 
-The term `v_i x* (I_i v_i)` is the **gyroscopic/Coriolis force** — the spatial cross product of velocity with momentum.
+```math
+\mathbf{a}_i = {}^iX_{\lambda(i)} \mathbf{a}_{\lambda(i)} + S_i \ddot{q}_i + \mathbf{v}_i \times (S_i \dot{q}_i)
+```
 
-**Gravity trick:** Setting the base acceleration to a_0 = [0,0,0, 0,0,+g]^T (upward) creates a fictitious force equivalent to gravity acting on all bodies, without explicitly computing gravitational potential.
+where ${}^iX_{\lambda(i)}$ is the spatial transform from parent to body $i$, and $S_i$ is the motion subspace vector (rotation axis for revolute joints). The term $\mathbf{v}_i \times (S_i \dot{q}_i)$ is the **velocity-product acceleration** (Coriolis effect at the joint level).
+
+**Backward Pass** (tips to base): accumulate forces via Newton-Euler.
+
+```math
+\mathbf{f}_i = \hat{I}_i \mathbf{a}_i + \mathbf{v}_i \times^* (\hat{I}_i \mathbf{v}_i)
+```
+
+```math
+\mathbf{f}_{\lambda(i)} \mathrel{+}= {}^iX_{\lambda(i)}^T \mathbf{f}_i \qquad \text{(force propagation to parent)}
+```
+
+```math
+\tau_i = S_i^T \mathbf{f}_i \qquad \text{(joint torque extraction)}
+```
+
+The term $\mathbf{v}_i \times^* (\hat{I}_i \mathbf{v}_i)$ is the **gyroscopic/Coriolis wrench** — the spatial force cross product of the body's velocity with its momentum. This captures all velocity-dependent forces (Coriolis, centrifugal) in a single compact expression.
+
+**Gravity trick:** Setting the base acceleration to $\mathbf{a}_0 = [0,0,0,\; 0,0,+g]^T$ (pointing upward) creates a fictitious force equivalent to gravity acting on all bodies, without explicitly computing gravitational potential energy derivatives. This elegant technique was introduced by Luh, Walker & Paul (1980).
 
 ### 5.2 Composite Rigid Body Algorithm (CRBA)
 
@@ -226,16 +236,24 @@ CRBA computes the mass matrix M(**q**) in O(N*d) time, where d is the tree depth
 
 **Pass 1** (tips to base): accumulate composite spatial inertias.
 
+```math
+I_i^c = \hat{I}_i \qquad \text{(initialize with body spatial inertia)}
 ```
-I_c[i] = I_i                                         (initialize with body inertia)
-I_c[lambda(i)] += X_i^T * I_c[i] * X_i              (accumulate to parent)
+
+```math
+I_{\lambda(i)}^c \mathrel{+}= {}^iX_{\lambda(i)}^T \; I_i^c \; {}^iX_{\lambda(i)} \qquad \text{(accumulate to parent)}
 ```
+
+This transform $X^T I X$ shifts the child's composite inertia into the parent's frame — the spatial equivalent of the parallel axis theorem applied recursively.
 
 **Pass 2**: extract mass matrix elements.
 
+```math
+M_{ii} = S_i^T I_i^c S_i \qquad \text{(diagonal: effective inertia seen by joint } i\text{)}
 ```
-M[i,i] = S_i^T * I_c[i] * S_i                       (diagonal: effective inertia)
-M[i,j] = S_j^T * F_i   (propagated up the chain)    (off-diagonal: coupling)
+
+```math
+M_{ij} = S_j^T \mathbf{F}_i \qquad \text{(off-diagonal: coupling, } \mathbf{F}_i \text{ propagated up the chain)}
 ```
 
 **Verification:** For our THOR model, M(q) is 40x40, symmetric, positive-definite, with M[3:6, 3:6] = 67.2 * I_3 (total mass on translational diagonal).
