@@ -655,9 +655,12 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 - **Left (Heatmap):** Logarithmic magnitude of M entries. The 6x6 upper-left block (floating base) shows the strongest coupling. The block-diagonal structure along the main diagonal reflects the kinematic tree branching: arms and legs form semi-independent subtrees with weak inter-branch coupling. The off-diagonal bands represent the base-joint coupling (M_bj) that was the source of the floating-base integration instability, resolved via base rotation constraint.
 
-- **Center (Eigenvalue Spectrum):** The eigenvalues span approximately 4 orders of magnitude (condition number ~10^4), which is typical for humanoid inertia matrices. The smallest eigenvalues correspond to the lightest distal bodies (grippers, head), while the largest correspond to the collective translational mass (67.2 kg). The condition number determines the stiffness of the ODE system and limits the maximum stable explicit integration timestep.
+- **Center (Eigenvalue Spectrum):** The eigenvalues span approximately 4 orders of magnitude (condition number $\kappa(M) \approx 3.5 \times 10^6$). This is characteristic of humanoid inertia matrices where the lightest distal body (gripper, ~0.15 kg) and heaviest aggregate (entire robot, 67.2 kg) differ by 450×. The condition number has direct implications for numerical integration: the maximum stable timestep for explicit Euler is bounded by $\Delta t < 2/\sqrt{\lambda_{\max}(M^{-1}K)}$. Our Cholesky-based solver handles this conditioning without difficulty.
 
-- **Right (Diagonal Elements):** The diagonal of M shows three distinct groups: (1) base rotational inertias (wx,wy,wz: 2-20 kg-m^2), (2) base translational mass (vx,vy,vz: 67.2 kg each — exactly the total robot mass, confirming CRBA correctness), (3) joint effective inertias (0.001-5 kg-m^2, varying by joint location in the kinematic tree).
+- **Right (Diagonal Elements):** The diagonal of M reveals the **three-tier inertia structure** of a humanoid:
+  - DOFs 0-2 (base angular): $I_{xx} = 19.8$, $I_{yy} = 17.9$, $I_{zz} = 2.5$ kg·m² — the yaw inertia ($I_{zz}$) is much smaller because the body is tall and narrow
+  - DOFs 3-5 (base translational): $m_{xx} = m_{yy} = m_{zz} = 67.2$ kg — exactly the total mass, confirming CRBA correctness via the fundamental relation $M[3:6,3:6] = m_{\text{total}} \cdot I_3$
+  - DOFs 6-39 (joints): range from 0.006 (head pitch) to 4.8 (hip pitch) kg·m², reflecting each joint's effective load (distal mass × lever arm²)
 
 ### 9.9 Energy Conservation Verification
 
