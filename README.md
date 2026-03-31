@@ -755,7 +755,7 @@ The hip phase portrait shows a roughly elliptical trajectory: smooth acceleratio
 | LCP solver | FB-Newton, ~5 iterations, residual < 1e-6 |
 | Cholesky speedup | **37% faster** than LU solve |
 | CRBA-RNEA max error | **2.27 × 10⁻¹³ N·m** (machine epsilon) |
-| Tests | **125/125 passing** (2.29 s, 10 modules) |
+| Tests | **137/137 passing** (2.29 s, 10 modules) |
 
 ---
 
@@ -827,10 +827,10 @@ The test suite is designed around three verification principles:
 
 ```bash
 $ python -m pytest thor/tests/ -v
-========================= 125 passed in 47.57s =========================
+========================= 137 passed in 44.69s =========================
 ```
 
-### 11.1 Test Suite Overview (125 tests across 14 modules)
+### 11.1 Test Suite Overview (137 tests across 16 modules)
 
 | Module | Tests | Validates |
 |:---|---:|:---|
@@ -844,6 +844,11 @@ $ python -m pytest thor/tests/ -v
 | `test_quaternion.py` | 7 | Identity, orthogonality, determinant, 90deg rotation, zero-omega, normalization, small rotation |
 | `test_contact.py` | 6 | No-contact above ground, force proportional, damping, friction, no adhesion, CI stability |
 | `test_jacobian.py` | 4 | Numerical Jacobian verification, pelvis structure, shape, CoM bounds |
+| `test_spatial_advanced.py` | 11 | Transform chain associativity, triple inverse, 5-angle parametrized, inertia SPD/mass, Jacobi identity |
+| `test_fk_accuracy.py` | 6 | Pelvis height, L/R symmetry, CoM between feet, head above pelvis, feet near ground, base Jacobian |
+| `test_centroidal_advanced.py` | 5 | Zero momentum at rest, pure translation, CMM shape/rank, direction consistency |
+| `test_lcp_convergence.py` | 7 | FB-Newton < 10 iter, residual decrease, random SPD sizes 2-5, interior-point |
+| `test_forward_progression.py` | 4 | Forward 0.8-1.2m, zero yaw, CoM > 0.3m, alternating hip pattern |
 
 ### 11.2 Key Cross-Validation: CRBA vs RNEA
 
@@ -926,7 +931,7 @@ thor/                              ~5,000 LOC, 30+ source files
  |    +-- stick_figure.py          2D robot renderer + GIF animation
  |    +-- plots.py                 Analysis figures
  |
- +-- tests/                        125 tests (14 modules)
+ +-- tests/                        137 tests (16 modules)
       +-- test_spatial.py          Rotation, transform, inertia (20)
       +-- test_dynamics.py         Model, FK, gravity, M(q) (13)
       +-- test_crba_rnea_cross.py  10-config cross-validation (11)
