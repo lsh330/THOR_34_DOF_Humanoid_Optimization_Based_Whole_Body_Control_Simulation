@@ -688,6 +688,20 @@ This is verified at **10 random configurations** (parametrized test) with random
 
 **Figure 10.** CRBA-RNEA cross-validation across 20 random configurations (800 torque values). Left: scatter plot showing perfect diagonal alignment. Right: error histogram with maximum error **2.27 × 10⁻¹³ N·m** (machine epsilon level), proving the two independently implemented O(N) algorithms are mathematically identical to floating-point precision.
 
+### 11.3 Test Evidence Dashboard
+
+![Test Evidence](docs/images/test_evidence.png)
+
+**Figure 12.** Comprehensive test evidence across all 104 tests, organized into 4 categories (12 panels):
+
+**Row 1 — Spatial Algebra:** (a) Rotation matrix determinant = 1 for all angles (rot_x, rot_y, rot_z). (b) Skew-symmetric matrix antisymmetry ||S+S^T|| = 0 (100 random vectors). (c) Spatial inertia minimum eigenvalue > 0 (positive-definiteness, 50 random configs).
+
+**Row 2 — Dynamics:** (d) CRBA-RNEA cross-validation scatter (400 torque values, 10 configs, perfect diagonal). (e) Mass matrix asymmetry heatmap (max |M-M^T| at machine epsilon). (f) Gravity force g[5] = mg for 20 random configurations.
+
+**Row 3 — Contact & Gait:** (g) LCP complementarity z·w ≈ 0. (h) Contact force proportional to penetration depth. (i) Swing leg trajectory within biomechanical ranges (hip/knee/ankle).
+
+**Row 4 — Performance & Integration:** (j) Computational timing (CRBA 1.6ms, RNEA 1.8ms, LCP 0.15ms). (k) Energy conservation during free fall (<5% drift). (l) Walking CoM height stability over 6 steps.
+
 ---
 
 ## 12. Project Structure
