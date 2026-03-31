@@ -230,8 +230,15 @@ def run_contact_implicit_simulation(
     t_final: float = 3.0,
     dt: float = 0.002,
     mu: float = MU_DEFAULT,
+    walking_speed: float = 0.1875,
 ) -> dict:
-    """Run simulation with contact-implicit Schur complement dynamics."""
+    """Run simulation with contact-implicit Schur complement dynamics.
+
+    Args:
+        walking_speed: Kinematic forward progression [m/s].
+            Set to 0.0 for standing simulations.
+            Default: 0.15/0.8 = 0.1875 (step_length / step_cycle).
+    """
     n_steps = int(t_final / dt) + 1
     q = q0.copy()
     v = np.zeros(model.n_dof)
@@ -253,11 +260,9 @@ def run_contact_implicit_simulation(
         fz_traj[step] = info.get("total_fz", 0.0)
         contact_traj[step] = info.get("n_contacts", 0)
 
-        # Kinematic forward progression: advance base at walking speed
-        # Applied unconditionally at every step.
-        # Walking speed = step_length / step_cycle ≈ 0.19 m/s
-        walking_speed = 0.15 / 0.8  # [m/s]
-        q_new[0] += dt * walking_speed
+        # Kinematic forward progression
+        if walking_speed > 0.0:
+            q_new[0] += dt * walking_speed
 
         q = q_new
         v = v_new
