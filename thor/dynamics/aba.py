@@ -62,8 +62,7 @@ def aba(
     a_grav[3:] = -GRAVITY_VEC
 
     # Precompute per-body data
-    _eye6 = np.eye(6)
-    X_up = [_eye6.copy() for _ in range(n)]
+    X_up = [np.eye(6) for _ in range(n)]
     S = [np.zeros(6) for _ in range(n)]       # Motion subspace
     vel = [np.zeros(6) for _ in range(n)]     # Spatial velocity
     c_bias = [np.zeros(6) for _ in range(n)]  # Velocity-dependent bias

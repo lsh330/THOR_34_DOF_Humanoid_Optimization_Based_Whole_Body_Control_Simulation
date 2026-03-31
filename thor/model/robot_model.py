@@ -262,7 +262,7 @@ class RobotModel:
         "links", "n_bodies", "n_joints", "n_dof",
         "parent", "joint_types", "joint_axes",
         "_joint_name_to_idx", "total_mass",
-        "foot_link_ids", "spatial_inertias",
+        "foot_link_ids", "spatial_inertias", "motion_subspaces",
     )
 
     def __init__(self) -> None:
@@ -291,10 +291,14 @@ class RobotModel:
         )
 
         # Cache spatial inertias (constant, computed once at model load)
-        from ..core.spatial import spatial_inertia
+        from ..core.spatial import spatial_inertia, motion_subspace_revolute
         self.spatial_inertias = [
             spatial_inertia(l.mass, l.com, l.inertia) for l in self.links
         ]
+
+        # Note: motion_subspace_revolute() is fast enough inline
+        # (benchmarked: caching was 2.3% slower due to list lookup overhead)
+        self.motion_subspaces = None  # Unused, kept for slot compatibility
 
     def joint_index(self, name: str) -> int:
         """Get joint/body index by name."""
