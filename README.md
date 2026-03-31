@@ -733,8 +733,18 @@ thor/                              ~5,000 LOC, 30+ source files
  |    +-- stick_figure.py          2D robot renderer + GIF animation
  |    +-- plots.py                 Analysis figures
  |
- +-- tests/                        58 tests, 0.94s
-      +-- test_dynamics.py      Model, kinematics, gravity, mass matrix, standing
+ +-- tests/                        100 tests, 2.29s (10 modules)
+      +-- test_spatial.py          Rotation, transform, inertia (20)
+      +-- test_dynamics.py         Model, FK, gravity, M(q) (13)
+      +-- test_crba_rnea_cross.py  10-config cross-validation (11)
+      +-- test_algorithms.py       CRBA-RNEA, energy (10)
+      +-- test_gait.py             Phase detection, continuity (9)
+      +-- test_walking.py          Biomechanical ranges (9)
+      +-- test_quaternion.py       Rotation, integration (7)
+      +-- test_lcp.py              LCP solvers (6)
+      +-- test_contact.py          Contact dynamics (6)
+      +-- test_integration.py      Config, integration (5)
+      +-- test_jacobian.py         Numerical Jacobian (4)
 ```
 
 ---
