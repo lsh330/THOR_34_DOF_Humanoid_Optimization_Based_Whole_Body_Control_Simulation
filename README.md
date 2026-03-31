@@ -735,7 +735,7 @@ The hip phase portrait shows a roughly elliptical trajectory: smooth acceleratio
 | LCP solver | FB-Newton, ~5 iterations, residual < 1e-6 |
 | Cholesky speedup | **37% faster** than LU solve |
 | CRBA-RNEA max error | **2.27 × 10⁻¹³ N·m** (machine epsilon) |
-| Tests | **108/108 passing** (2.29 s, 10 modules) |
+| Tests | **119/119 passing** (2.29 s, 10 modules) |
 
 ---
 
@@ -807,10 +807,10 @@ The test suite is designed around three verification principles:
 
 ```bash
 $ python -m pytest thor/tests/ -v
-========================= 108 passed in 49.39s =========================
+========================= 119 passed in 57.19s =========================
 ```
 
-### 11.1 Test Suite Overview (108 tests across 12 modules)
+### 11.1 Test Suite Overview (119 tests across 13 modules)
 
 | Module | Tests | Validates |
 |:---|---:|:---|
@@ -906,7 +906,7 @@ thor/                              ~5,000 LOC, 30+ source files
  |    +-- stick_figure.py          2D robot renderer + GIF animation
  |    +-- plots.py                 Analysis figures
  |
- +-- tests/                        108 tests (12 modules)
+ +-- tests/                        119 tests (13 modules)
       +-- test_spatial.py          Rotation, transform, inertia (20)
       +-- test_dynamics.py         Model, FK, gravity, M(q) (13)
       +-- test_crba_rnea_cross.py  10-config cross-validation (11)
