@@ -963,23 +963,20 @@ cd THOR_34_DOF_Humanoid_Optimization_Based_Whole_Body_Control_Simulation
 # Install
 pip install -r requirements.txt
 
-# Run tests
+# Run tests (137 tests, ~45s)
 python -m pytest thor/tests/ -v
 
-# Contact-Implicit MPC Standing
-python -c "
-from thor.model.robot_model import RobotModel
-from thor.dynamics.contact_implicit import run_contact_implicit_simulation
-from thor.simulation.standing import default_standing_config
-from thor.control.contact_implicit_mpc import ContactImplicitMPC
+# Standing simulation (CI-MPC + LCP)
+python main.py --scenario standing
 
-model = RobotModel()
-q0 = default_standing_config(model)
-mpc = ContactImplicitMPC(model, Q_q=500.0, Q_v=50.0)
-mpc.set_reference(q0)
-result = run_contact_implicit_simulation(model, q0, mpc.compute, t_final=5.0)
-print(f'CoM stability: {result[\"com\"][len(result[\"com\"])//2:, 2].std()*1000:.2f} mm')
-"
+# Walking simulation (Computed Torque Control, 6 steps)
+python main.py --scenario walking
+
+# Walking with GIF animation
+python main.py --scenario walking --save-gif
+
+# Custom duration
+python main.py --scenario walking --t-final 3.0 --dt 0.001
 ```
 
 ### Walking Simulation
