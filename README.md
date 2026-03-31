@@ -111,7 +111,7 @@ All dynamics use Featherstone's spatial vector notation (Plucker coordinates). T
 
 ### 3.1 Spatial Motion and Force Vectors
 
-A **spatial motion vector** (twist) combines angular and linear velocity:
+A **spatial motion vector** (twist) combines angular and linear velocity into a single 6D object. The key insight of Featherstone's formalism: by treating rotation and translation as components of the same vector, all rigid body dynamics algorithms can be written in a uniform, recursive form that applies identically to revolute, prismatic, and floating-base joints.
 
 ```math
 \mathbf{v} = \begin{bmatrix} \boldsymbol{\omega} \\ \mathbf{v}_{\mathrm{lin}} \end{bmatrix} \in \mathbb{R}^6
