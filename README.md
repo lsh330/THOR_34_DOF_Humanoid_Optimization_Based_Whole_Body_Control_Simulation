@@ -627,7 +627,7 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ![CoM Trajectory](docs/images/com_trajectory_walking.png)
 
-**Figure 7.** Center of mass trajectory projected onto the x-z (sagittal) plane during walking. Color encodes time progression (dark purple = start, bright yellow = end). The trajectory shows characteristic features of bipedal walking: vertical oscillation of ~2 cm per step cycle (CoM rises during mid-stance as the inverted pendulum sweeps over the stance foot, then drops during double support transitions). The forward progression along x is minimal in this stepping simulation, but the vertical oscillation pattern is clearly visible and physically correct.
+**Figure 7.** Center of mass dynamics during walking. Left: 3D trajectory (x, y, z) with time color encoding (plasma colormap). The forward progression along x spans 0.95 m over 5.1 seconds, while the lateral (y) displacement remains near zero (sagittal-plane walking). Right: CoM height with gait phase coloring (blue = L swing, red = R swing). The vertical oscillation of ~2 cm per step cycle is characteristic of the **inverted pendulum model** of human walking: the CoM rises during single support (vaulting over the straight stance leg) and drops during double support transitions (energy exchange between kinetic and potential). The oscillation frequency (2 cycles per stride = 1 cycle per step) matches the expected pattern from biomechanics literature (Winter, 1991).
 
 ### 9.8 Mass Matrix Structure
 
