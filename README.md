@@ -659,7 +659,15 @@ The **side view** (right) shows the sagittal-plane standing posture: natural kne
 
 **Figure 7.** Center of mass dynamics during walking. Left: 3D trajectory (x, y, z) with time color encoding (plasma colormap). The forward progression along x spans 0.95 m over 5.1 seconds, while the lateral (y) displacement remains near zero (sagittal-plane walking). Right: CoM height with gait phase coloring (blue = L swing, red = R swing). The vertical oscillation of ~2 cm per step cycle is characteristic of the **inverted pendulum model** of human walking: the CoM rises during single support (vaulting over the straight stance leg) and drops during double support transitions (energy exchange between kinetic and potential). The oscillation frequency (2 cycles per stride = 1 cycle per step) matches the expected pattern from biomechanics literature (Winter, 1991).
 
-### 9.8 Mass Matrix Structure
+### 9.8 Joint Phase Portraits
+
+![Phase Portraits](docs/images/phase_portraits.png)
+
+**Figure 8a.** Phase portraits of the left hip pitch (left) and left knee pitch (right) during walking, with time encoded as color (purple→yellow). The **limit cycle behavior** is clearly visible: the trajectories form closed loops in the angle-velocity plane, repeating with each gait cycle. This is the hallmark of stable periodic walking — the Computed Torque Controller drives the joints along a repeating orbit that matches the biomechanical swing/stance profiles.
+
+The hip phase portrait shows a roughly elliptical trajectory: smooth acceleration during swing (velocity peaks at ~100 deg/s mid-swing) followed by deceleration at heel strike. The knee portrait shows asymmetry: rapid flexion in early swing (steep positive velocity) followed by slower extension in late swing, consistent with the $\sin^{0.8}$ trajectory parametrization.
+
+### 9.9 Mass Matrix Structure
 
 ![Mass Matrix](docs/images/mass_matrix_analysis.png)
 
@@ -674,19 +682,19 @@ The **side view** (right) shows the sagittal-plane standing posture: natural kne
   - DOFs 3-5 (base translational): $m_{xx} = m_{yy} = m_{zz} = 67.2$ kg — exactly the total mass, confirming CRBA correctness via the fundamental relation $M[3:6,3:6] = m_{\text{total}} \cdot I_3$
   - DOFs 6-39 (joints): range from 0.006 (head pitch) to 4.8 (hip pitch) kg·m², reflecting each joint's effective load (distal mass × lever arm²)
 
-### 9.9 Energy Conservation Verification
+### 9.10 Energy Conservation Verification
 
 ![Energy Conservation](docs/images/energy_conservation.png)
 
 **Figure 9.** Energy conservation during free fall (500 ms, dt=1ms, no control). Left: KE/PE/Total decomposition showing energy exchange during acceleration under gravity. Right: Energy drift percentage — bounded within acceptable limits for semi-implicit Euler, confirming numerical stability of the 40-DOF integrator.
 
-### 9.10 Ground Reaction Force Profile
+### 9.11 Ground Reaction Force Profile
 
 ![GRF Profile](docs/images/grf_profile.png)
 
 **Figure 12.** Vertical ground reaction force during CI-MPC standing (3 seconds). The force is normalized by body weight ($BW = mg = 659$ N). During static standing, the GRF is exactly 1.0 BW — the LCP contact solver correctly resolves the contact forces to balance gravity. The constant GRF profile confirms that the complementarity condition $\lambda \cdot w = 0$ is satisfied with $\lambda > 0$ (active contact) and $w = 0$ (zero contact velocity). During walking, the GRF would exhibit the characteristic **M-shaped double-hump curve** (first peak at heel strike, valley at midstance, second peak at push-off) described by Winter (1991) and Nilsson & Thorstensson (1989).
 
-### 9.11 Computational Performance
+### 9.12 Computational Performance
 
 ![Performance](docs/images/performance_benchmark.png)
 
@@ -702,7 +710,7 @@ The **side view** (right) shows the sagittal-plane standing posture: natural kne
 
 **Simulation rate:** ~300 Hz (3.3 ms/step), sufficient for 50 Hz MPC planning. The dominant cost is the CRBA mass matrix computation, which involves 35 × 7 = 245 spatial (6×6) matrix multiplications. Further speedup would require Numba JIT compilation of the RNEA/CRBA inner loops (expected ~5-10× improvement).
 
-### 9.12 Performance Summary
+### 9.13 Performance Summary
 
 | Metric | Standing (CI-MPC) | Walking (CTC) |
 |:---|:---|:---|
