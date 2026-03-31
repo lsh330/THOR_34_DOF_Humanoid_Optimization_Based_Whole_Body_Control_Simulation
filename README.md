@@ -533,7 +533,7 @@ with $\theta_{\mathrm{ext}} = -5°$ (terminal stance) and $\theta_{\mathrm{flex}
 \theta_{\mathrm{knee}}(s) = \theta_0 + (\theta_{\mathrm{peak}} - \theta_0) \cdot \sin^{0.8}(\pi s)
 ```
 
-with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The exponent 0.8 shifts the peak earlier in the swing (matching biomechanical data where peak knee flexion occurs at ~40% of swing, not mid-swing).
+with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The exponent 0.8 (instead of 1.0) shifts the peak earlier in the swing phase, matching biomechanical data where peak knee flexion occurs at approximately 73-80% of the gait cycle (~40% of swing phase), driven primarily by the hip flexor's acceleration of the thigh which passively flexes the knee through inertial coupling (Perry, 1992). This early-peak asymmetry is crucial for realistic foot clearance timing — the foot must clear the ground early in swing, not at mid-swing, to allow time for knee extension before heel strike.
 
 **Ankle pitch** (dorsiflexion for foot clearance):
 
