@@ -567,6 +567,26 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 \theta_{\mathrm{ankle}}(s) = 5° \cdot \sin(\pi s)
 ```
 
+**Stance leg trajectories** (complementary profiles during stance phase, $s \in [0,1]$):
+
+```math
+\theta_{\mathrm{hip,stance}}(s) = \theta_{\mathrm{flex}}(1-s) + \theta_{\mathrm{ext}} \cdot s
+```
+
+The stance hip transitions linearly from flexion (just landed) to extension (about to push off). The stance knee maintains slight flexion for shock absorption at loading response:
+
+```math
+\theta_{\mathrm{knee,stance}}(s) = \theta_0 + 10° \cdot \sin\left(\frac{\pi s}{2}\right)
+```
+
+**Double support transition:** Between swing and stance phases, a **cosine-blend interpolation** ensures $C^0$ continuity:
+
+```math
+\theta_{\mathrm{DS}}(s_{\mathrm{DS}}) = \theta_{\mathrm{swing,end}} \cdot \frac{1 + \cos(\pi s_{\mathrm{DS}})}{2} + \theta_{\mathrm{stance,start}} \cdot \frac{1 - \cos(\pi s_{\mathrm{DS}})}{2}
+```
+
+This smooth blending eliminates the joint velocity discontinuities that would otherwise occur at gait phase transitions, preventing impulsive torque spikes in the Computed Torque Controller.
+
 > **Reference:** Winter, D.A. (1991). *Biomechanics and Motor Control of Human Movement*. Wiley.
 
 ---
