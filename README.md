@@ -551,7 +551,15 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ![THOR Walking GIF](docs/images/thor_walking.gif)
 
-**Figure 4.** Animated dual-view of the THOR humanoid during walking simulation (4 steps, 3.4 seconds). The front view (left) shows the leg chains alternately flexing and extending as the robot steps. The side view (right) reveals the sagittal-plane hip/knee/ankle coordination: during the swing phase, the hip flexes forward while the knee bends to clear the ground, then both extend for touchdown. The gait phase is displayed in the title overlay (DS = double support, L/R Swing = left/right leg swing). The CoM height oscillation (~2 cm per step) is visible in the body center movement.
+**Figure 4.** Side-view animation of the THOR humanoid walking forward (6 steps, 5.1 seconds, 106 frames at 20 fps). The camera tracks the robot as it advances at 0.19 m/s, covering 0.95 m total. Key observations:
+
+- **Forward progression:** The robot advances smoothly from left to right. The base (red square) moves at constant velocity, matching the kinematic walking speed of step_length / step_cycle = 0.15 m / 0.8 s.
+
+- **Alternating leg swing:** The green (left leg) and orange (right leg) chains alternate between swing and stance phases. During swing, the hip flexes forward (+20°) and the knee bends sharply (+36°) for foot clearance. During stance, the leg extends and supports the body weight.
+
+- **Sagittal-plane coordination:** The hip-knee-ankle coordination follows the biomechanical profiles of Winter (1991). The knee flexion peak occurs at ~40% of swing phase (early-mid swing), consistent with human gait data.
+
+- **No rotation artifact:** The robot maintains zero yaw throughout (previously exhibited ±131° spurious rotation due to a velocity convention bug, now fixed). The base quaternion remains [1,0,0,0] within machine precision.
 
 ### 9.5 Walking Dynamics Analysis
 
