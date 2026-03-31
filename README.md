@@ -17,12 +17,13 @@ A from-scratch Python implementation of **Contact-Implicit Model Predictive Cont
 5. [O(N) Dynamics Algorithms](#5-on-dynamics-algorithms)
 6. [Contact-Implicit Dynamics via LCP](#6-contact-implicit-dynamics-via-lcp)
 7. [Contact-Implicit MPC](#7-contact-implicit-mpc)
-8. [Simulation Results](#8-simulation-results)
-9. [Control Architecture](#9-control-architecture)
-10. [Testing](#10-testing)
-11. [Project Structure](#11-project-structure)
-12. [Quick Start](#12-quick-start)
-13. [References](#13-references)
+8. [Computed Torque Control for Walking](#8-computed-torque-control-for-walking)
+9. [Simulation Results](#9-simulation-results)
+10. [Control Architecture](#10-control-architecture)
+11. [Testing](#11-testing)
+12. [Project Structure](#12-project-structure)
+13. [Quick Start](#13-quick-start)
+14. [References](#14-references)
 
 ---
 
@@ -425,7 +426,73 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 ---
 
-## 8. Simulation Results
+## 8. Computed Torque Control for Walking
+
+### 8.1 The Tracking Problem
+
+Given desired joint trajectories $\mathbf{q}_d(t)$ from the gait generator, we need torques $\boldsymbol{\tau}$ that make the joints track these trajectories perfectly. The naive approach (gravity compensation + PD) fails because Coriolis forces $C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}}$ can balance the PD terms at a drifted configuration, creating a false equilibrium.
+
+### 8.2 Inverse Dynamics Formulation
+
+Computed Torque Control (CTC) cancels ALL nonlinear dynamics by computing:
+
+```math
+\boldsymbol{\tau} = M_{jj}(\mathbf{q}) \ddot{\mathbf{q}}_{\mathrm{des}} + \mathbf{h}_j(\mathbf{q}, \dot{\mathbf{q}})
+```
+
+where the desired acceleration uses PD feedback:
+
+```math
+\ddot{\mathbf{q}}_{\mathrm{des}} = -K_p (\mathbf{q} - \mathbf{q}_d) - K_d (\dot{\mathbf{q}} - \dot{\mathbf{q}}_d)
+```
+
+Substituting into the dynamics $M_{jj}\ddot{\mathbf{q}} = \boldsymbol{\tau} - \mathbf{h}_j$:
+
+```math
+M_{jj}\ddot{\mathbf{q}} = M_{jj}\ddot{\mathbf{q}}_{\mathrm{des}} + \mathbf{h}_j - \mathbf{h}_j = M_{jj}\ddot{\mathbf{q}}_{\mathrm{des}}
+```
+
+Since $M_{jj}$ is invertible (positive definite), we get $\ddot{\mathbf{q}} = \ddot{\mathbf{q}}_{\mathrm{des}}$ **exactly**. The tracking error dynamics become:
+
+```math
+\ddot{\mathbf{e}} + K_d \dot{\mathbf{e}} + K_p \mathbf{e} = \mathbf{0}
+```
+
+which is a stable linear system (all eigenvalues in the left half-plane for $K_p, K_d > 0$).
+
+> **Reference:** Spong, M.W., Hutchinson, S. & Vidyasagar, M. (2005). *Robot Modeling and Control*, Ch. 8.
+
+### 8.3 Walking Biomechanics (Winter 1991)
+
+Joint angle profiles during the swing phase are parameterized by the normalized phase $s \in [0, 1]$ (0 = toe-off, 1 = heel strike):
+
+**Hip pitch** (sinusoidal flexion from extension to flexion):
+
+```math
+\theta_{\mathrm{hip}}(s) = \theta_{\mathrm{ext}} + (\theta_{\mathrm{flex}} - \theta_{\mathrm{ext}}) \cdot \frac{1 - \cos(\pi s)}{2}
+```
+
+with $\theta_{\mathrm{ext}} = -5°$ (terminal stance) and $\theta_{\mathrm{flex}} = +20°$ (terminal swing).
+
+**Knee pitch** (asymmetric bell for early-peak flexion):
+
+```math
+\theta_{\mathrm{knee}}(s) = \theta_0 + (\theta_{\mathrm{peak}} - \theta_0) \cdot \sin^{0.8}(\pi s)
+```
+
+with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The exponent 0.8 shifts the peak earlier in the swing (matching biomechanical data where peak knee flexion occurs at ~40% of swing, not mid-swing).
+
+**Ankle pitch** (dorsiflexion for foot clearance):
+
+```math
+\theta_{\mathrm{ankle}}(s) = 5° \cdot \sin(\pi s)
+```
+
+> **Reference:** Winter, D.A. (1991). *Biomechanics and Motor Control of Human Movement*. Wiley.
+
+---
+
+## 9. Simulation Results
 
 ### 8.1 Robot Structure
 
@@ -538,7 +605,7 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 ---
 
-## 9. Control Architecture
+## 10. Control Architecture
 
 ```
 +================================================================+
@@ -572,7 +639,7 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 ---
 
-## 10. Testing
+## 11. Testing
 
 ```bash
 $ python -m pytest thor/tests/ -v
@@ -601,7 +668,7 @@ This is verified for random accelerations with tolerance 1e-6, confirming both t
 
 ---
 
-## 11. Project Structure
+## 12. Project Structure
 
 ```
 thor/                              ~5,000 LOC, 30+ source files
@@ -658,7 +725,7 @@ thor/                              ~5,000 LOC, 30+ source files
 
 ---
 
-## 12. Quick Start
+## 13. Quick Start
 
 ```bash
 # Clone
@@ -689,7 +756,7 @@ print(f'CoM stability: {result[\"com\"][len(result[\"com\"])//2:, 2].std()*1000:
 
 ---
 
-## 13. References
+## 14. References
 
 1. Le Cleac'h, S., Howell, T., Schwager, M. & Manchester, Z. (2024). "Fast Contact-Implicit Model Predictive Control." *IEEE Trans. Robotics*, 40, 1617-1634.
 2. Hopkins, M.A. & Leonessa, A. (2015). "Optimization-Based Whole-Body Control of a Series Elastic Humanoid Robot." *Int. J. Humanoid Robotics*, 12(3).
