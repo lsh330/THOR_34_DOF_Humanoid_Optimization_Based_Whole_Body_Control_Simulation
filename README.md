@@ -23,7 +23,8 @@ A from-scratch Python implementation of **Contact-Implicit Model Predictive Cont
 11. [Testing](#11-testing)
 12. [Project Structure](#12-project-structure)
 13. [Quick Start](#13-quick-start)
-14. [References](#14-references)
+14. [Implementation Challenges](#14-implementation-challenges-and-solutions)
+15. [References](#15-references)
 
 ---
 
@@ -1022,7 +1023,22 @@ print(f"CRBA+RNEA: {(time.perf_counter()-t0)/100*1000:.2f} ms/call")
 
 ---
 
-## 14. References
+## 14. Implementation Challenges and Solutions
+
+This section documents the key technical challenges encountered during development and their solutions, as a reference for researchers implementing similar systems.
+
+| Challenge | Root Cause | Solution | Section |
+|:---|:---|:---|:---|
+| Floating-base integration divergence | $M_{bj}$ coupling propagates base angular acceleration (~47 rad/s²) into joints | **Schur complement** elimination: solve $M_{jj}\ddot{\mathbf{q}}_j = \boldsymbol{\tau}_j - \mathbf{h}_j$ (34×34 only) | 8.2 |
+| Walking joints freeze mid-gait | Coriolis $C\dot{\mathbf{q}}$ balances PD at drifted config (false equilibrium) | **Computed Torque Control**: $\boldsymbol{\tau} = M\ddot{\mathbf{q}}_{\mathrm{des}} + \mathbf{h}$ guarantees $\ddot{\mathbf{q}} = \ddot{\mathbf{q}}_{\mathrm{des}}$ | 8.3 |
+| Robot rotates during walking | Velocity convention swap: position updated with $\omega$, quaternion with $\mathbf{v}_{\mathrm{lin}}$ | Fixed: position += $h \cdot \mathbf{v}[3{:}6]$, quat += $h \cdot \mathbf{v}[0{:}3]$ (Featherstone) | 6.2 |
+| LCP sign error → zero contact force | Schur complement: $\lambda = A^{-1}b$ (wrong), should be $\lambda = A^{-1}(-b)$ | Fixed sign in $b = -J_n M^{-1}(\boldsymbol{\tau} - \mathbf{h})$ | 6.4 |
+| Spring-damper contact instability | Contact stiffness creates stiff ODE, explicit Euler unstable | Replaced with **constraint-based contact** (KKT/LCP) | 6.2 |
+| 2D array slower than list in RNEA | `np.zeros((n,6))` row slicing creates views with overhead | Kept `[np.zeros(6) for _ in range(n)]` (20% faster for small arrays) | 5.1 |
+
+---
+
+## 15. References
 
 1. Le Cleac'h, S., Howell, T., Schwager, M. & Manchester, Z. (2024). "Fast Contact-Implicit Model Predictive Control." *IEEE Trans. Robotics*, 40, 1617-1634.
 2. Hopkins, M.A. & Leonessa, A. (2015). "Optimization-Based Whole-Body Control of a Series Elastic Humanoid Robot." *Int. J. Humanoid Robotics*, 12(3).
