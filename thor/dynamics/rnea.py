@@ -73,17 +73,15 @@ def rnea(
     a_grav = np.zeros(6)
     a_grav[3:] = -GRAVITY_VEC  # Negative because we add it to base acceleration
 
-    # Allocate per-body arrays
-    vel = [np.zeros(6) for _ in range(n)]       # spatial velocity
-    acc = [np.zeros(6) for _ in range(n)]       # spatial acceleration
-    f = [np.zeros(6) for _ in range(n)]         # spatial force
-    X_up = [np.eye(6) for _ in range(n)]        # transform to parent
+    # Per-body arrays (list of 1D arrays — faster than 2D slicing in Python)
+    vel = [np.zeros(6) for _ in range(n)]
+    acc = [np.zeros(6) for _ in range(n)]
+    f = [np.zeros(6) for _ in range(n)]
+    X_up = [np.eye(6) for _ in range(n)]
 
-    # Precompute spatial inertias
-    I_s = []
-    for i in range(n):
-        link = model.links[i]
-        I_s.append(spatial_inertia(link.mass, link.com, link.inertia))
+    # Precompute spatial inertias (once per call)
+    I_s = [spatial_inertia(model.links[i].mass, model.links[i].com,
+                            model.links[i].inertia) for i in range(n)]
 
     # === Forward pass: velocities and accelerations ===
 
