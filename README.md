@@ -727,7 +727,7 @@ The **side view** (right) shows the sagittal-plane standing posture: natural kne
 | LCP solver | FB-Newton, ~5 iterations, residual < 1e-6 |
 | Cholesky speedup | **37% faster** than LU solve |
 | CRBA-RNEA max error | **2.27 × 10⁻¹³ N·m** (machine epsilon) |
-| Tests | **104/104 passing** (2.29 s, 10 modules) |
+| Tests | **108/108 passing** (2.29 s, 10 modules) |
 
 ---
 
@@ -799,10 +799,10 @@ The test suite is designed around three verification principles:
 
 ```bash
 $ python -m pytest thor/tests/ -v
-========================= 104 passed in 1.77s =========================
+========================= 108 passed in 49.39s =========================
 ```
 
-### 11.1 Test Suite Overview (104 tests across 11 modules)
+### 11.1 Test Suite Overview (108 tests across 12 modules)
 
 | Module | Tests | Validates |
 |:---|---:|:---|
@@ -898,7 +898,7 @@ thor/                              ~5,000 LOC, 30+ source files
  |    +-- stick_figure.py          2D robot renderer + GIF animation
  |    +-- plots.py                 Analysis figures
  |
- +-- tests/                        104 tests, 1.77s (11 modules)
+ +-- tests/                        108 tests (12 modules)
       +-- test_spatial.py          Rotation, transform, inertia (20)
       +-- test_dynamics.py         Model, FK, gravity, M(q) (13)
       +-- test_crba_rnea_cross.py  10-config cross-validation (11)
