@@ -684,7 +684,7 @@ The **side view** (right) shows the sagittal-plane standing posture: natural kne
 
 ![Phase Portraits](docs/images/phase_portraits.png)
 
-**Figure 8a.** Phase portraits of the left hip pitch (left) and left knee pitch (right) during walking, with time encoded as color (purple→yellow). The **limit cycle behavior** is clearly visible: the trajectories form closed loops in the angle-velocity plane, repeating with each gait cycle. This is the hallmark of stable periodic walking — the Computed Torque Controller drives the joints along a repeating orbit that matches the biomechanical swing/stance profiles.
+**Figure 8.** Phase portraits of the left hip pitch (left) and left knee pitch (right) during walking, with time encoded as color (purple→yellow). The **limit cycle behavior** is clearly visible: the trajectories form closed loops in the angle-velocity plane, repeating with each gait cycle. This is the hallmark of stable periodic walking — the Computed Torque Controller drives the joints along a repeating orbit that matches the biomechanical swing/stance profiles.
 
 The hip phase portrait shows a roughly elliptical trajectory: smooth acceleration during swing (velocity peaks at ~100 deg/s mid-swing) followed by deceleration at heel strike. The knee portrait shows asymmetry: rapid flexion in early swing (steep positive velocity) followed by slower extension in late swing, consistent with the $\sin^{0.8}$ trajectory parametrization.
 
@@ -692,7 +692,7 @@ The hip phase portrait shows a roughly elliptical trajectory: smooth acceleratio
 
 ![Mass Matrix](docs/images/mass_matrix_analysis.png)
 
-**Figure 8.** Analysis of the 40x40 joint-space inertia matrix M(q) computed by the Composite Rigid Body Algorithm.
+**Figure 9.** Analysis of the 40x40 joint-space inertia matrix M(q) computed by the Composite Rigid Body Algorithm.
 
 - **Left (Heatmap):** Logarithmic magnitude of M entries. The 6x6 upper-left block (floating base) shows the strongest coupling. The block-diagonal structure along the main diagonal reflects the kinematic tree branching: arms and legs form semi-independent subtrees with weak inter-branch coupling. The off-diagonal bands represent the base-joint coupling (M_bj) that was the source of the floating-base integration instability, resolved via base rotation constraint.
 
@@ -707,19 +707,19 @@ The hip phase portrait shows a roughly elliptical trajectory: smooth acceleratio
 
 ![Energy Conservation](docs/images/energy_conservation.png)
 
-**Figure 9.** Energy conservation during free fall (500 ms, dt=1ms, no control). Left: KE/PE/Total decomposition showing energy exchange during acceleration under gravity. Right: Energy drift percentage — bounded within acceptable limits for semi-implicit Euler, confirming numerical stability of the 40-DOF integrator.
+**Figure 10.** Energy conservation during free fall (500 ms, dt=1ms, no control). Left: KE/PE/Total decomposition showing energy exchange during acceleration under gravity. Right: Energy drift percentage — bounded within acceptable limits for semi-implicit Euler, confirming numerical stability of the 40-DOF integrator.
 
 ### 9.11 Ground Reaction Force Profile
 
 ![GRF Profile](docs/images/grf_profile.png)
 
-**Figure 12.** Vertical ground reaction force during CI-MPC standing (3 seconds). The force is normalized by body weight ($BW = mg = 659$ N). During static standing, the GRF is exactly 1.0 BW — the LCP contact solver correctly resolves the contact forces to balance gravity. The constant GRF profile confirms that the complementarity condition $\lambda \cdot w = 0$ is satisfied with $\lambda > 0$ (active contact) and $w = 0$ (zero contact velocity). During walking, the GRF would exhibit the characteristic **M-shaped double-hump curve** (first peak at heel strike, valley at midstance, second peak at push-off) described by Winter (1991) and Nilsson & Thorstensson (1989).
+**Figure 11.** Vertical ground reaction force during CI-MPC standing (3 seconds). The force is normalized by body weight ($BW = mg = 659$ N). During static standing, the GRF is exactly 1.0 BW — the LCP contact solver correctly resolves the contact forces to balance gravity. The constant GRF profile confirms that the complementarity condition $\lambda \cdot w = 0$ is satisfied with $\lambda > 0$ (active contact) and $w = 0$ (zero contact velocity). During walking, the GRF would exhibit the characteristic **M-shaped double-hump curve** (first peak at heel strike, valley at midstance, second peak at push-off) described by Winter (1991) and Nilsson & Thorstensson (1989).
 
 ### 9.12 Computational Performance
 
 ![Performance](docs/images/performance_benchmark.png)
 
-**Figure 13.** Per-component timing benchmark (Python/NumPy, no JIT compilation). After spatial algebra optimization (math.cos/sin, np.empty, direct element assignment):
+**Figure 12.** Per-component timing benchmark (Python/NumPy, no JIT compilation). After spatial algebra optimization (math.cos/sin, np.empty, direct element assignment):
 
 | Component | Time | Operations | Complexity |
 |:---|---:|:---|:---|
@@ -863,13 +863,13 @@ This is verified at **10 random configurations** (parametrized test) with random
 
 ![CRBA-RNEA Cross-Validation](docs/images/crba_rnea_cross_validation.png)
 
-**Figure 10.** CRBA-RNEA cross-validation across 20 random configurations (800 torque values). Left: scatter plot showing perfect diagonal alignment. Right: error histogram with maximum error **2.27 × 10⁻¹³ N·m** (machine epsilon level), proving the two independently implemented O(N) algorithms are mathematically identical to floating-point precision.
+**Figure 13.** CRBA-RNEA cross-validation across 20 random configurations (800 torque values). Left: scatter plot showing perfect diagonal alignment. Right: error histogram with maximum error **2.27 × 10⁻¹³ N·m** (machine epsilon level), proving the two independently implemented O(N) algorithms are mathematically identical to floating-point precision.
 
 ### 11.3 Test Evidence Dashboard
 
 ![Test Evidence](docs/images/test_evidence.png)
 
-**Figure 12.** Comprehensive test evidence across all 104 tests, organized into 4 categories (12 panels):
+**Figure 14.** Comprehensive test evidence across all 104 tests, organized into 4 categories (12 panels):
 
 **Row 1 — Spatial Algebra:** (a) Rotation matrix determinant = 1 for all angles (rot_x, rot_y, rot_z). (b) Skew-symmetric matrix antisymmetry ||S+S^T|| = 0 (100 random vectors). (c) Spatial inertia minimum eigenvalue > 0 (positive-definiteness, 50 random configs).
 
