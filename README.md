@@ -237,6 +237,8 @@ where ${}^iX_{\lambda(i)}$ is the spatial transform from parent to body $i$, and
 \tau_i = S_i^T \mathbf{f}_i \qquad \text{(joint torque extraction)}
 ```
 
+**Newton-Euler interpretation:** The force equation $\mathbf{f}_i = \hat{I}_i \mathbf{a}_i + \mathbf{v}_i \times^* (\hat{I}_i \mathbf{v}_i)$ is the spatial form of Newton's second law for body $i$. The first term $\hat{I}_i \mathbf{a}_i$ is the inertia times acceleration (like $F = ma$). The second term captures velocity-dependent effects.
+
 The term $\mathbf{v}_i \times^* (\hat{I}_i \mathbf{v}_i)$ is the **gyroscopic/Coriolis wrench** — the spatial force cross product of the body's velocity with its momentum. This captures all velocity-dependent forces (Coriolis, centrifugal) in a single compact expression.
 
 **Gravity trick:** Setting the base acceleration to $\mathbf{a}_0 = [0,0,0,\; 0,0,+g]^T$ (pointing upward) creates a fictitious force equivalent to gravity acting on all bodies, without explicitly computing gravitational potential energy derivatives. This elegant technique was introduced by Luh, Walker & Paul (1980).
@@ -451,7 +453,27 @@ This converts the nonlinear MPC into a **QP with Linear Complementarity Constrai
 
 Given desired joint trajectories $\mathbf{q}_d(t)$ from the gait generator, we need torques $\boldsymbol{\tau}$ that make the joints track these trajectories perfectly. The naive approach (gravity compensation + PD) fails because Coriolis forces $C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}}$ can balance the PD terms at a drifted configuration, creating a false equilibrium.
 
-### 8.2 Inverse Dynamics Formulation
+### 8.2 Schur Complement Base Elimination
+
+During double support (both feet on ground), the base is kinematically constrained: $\ddot{\mathbf{q}}_b = \mathbf{0}$. Naively solving the full 40×40 system and then zeroing the base DOFs produces **coupling artifacts** — the off-diagonal block $M_{bj}$ propagates base dynamics into joint accelerations at ~47 rad/s², causing numerical explosion.
+
+The correct approach uses the **Schur complement** to eliminate the constrained base DOFs before solving:
+
+Starting from the block EOM:
+
+```math
+\begin{bmatrix} M_{bb} & M_{bj} \\ M_{jb} & M_{jj} \end{bmatrix} \begin{bmatrix} \ddot{\mathbf{q}}_b \\ \ddot{\mathbf{q}}_j \end{bmatrix} = \begin{bmatrix} \mathbf{f}_b \\ \boldsymbol{\tau}_j - \mathbf{h}_j \end{bmatrix}
+```
+
+With the constraint $\ddot{\mathbf{q}}_b = \mathbf{0}$, the joint equation reduces to:
+
+```math
+M_{jj} \ddot{\mathbf{q}}_j = \boldsymbol{\tau}_j - \mathbf{h}_j
+```
+
+This is a **34×34 system** (instead of 40×40) that is completely decoupled from the base. The base reaction forces are recovered from the first row: $\mathbf{f}_b = M_{bj}\ddot{\mathbf{q}}_j + \mathbf{h}_b$.
+
+### 8.3 Computed Torque Control (Inverse Dynamics)
 
 Computed Torque Control (CTC) cancels ALL nonlinear dynamics by computing:
 
@@ -485,7 +507,7 @@ which is a **stable, decoupled, linear system**. For $K_p, K_d > 0$, all eigenva
 
 > **Reference:** Spong, M.W., Hutchinson, S. & Vidyasagar, M. (2005). *Robot Modeling and Control*, Ch. 8.
 
-### 8.3 Walking Biomechanics (Winter 1991)
+### 8.4 Walking Biomechanics (Winter 1991)
 
 Joint angle profiles during the swing phase are parameterized by the normalized phase $s \in [0, 1]$ (0 = toe-off, 1 = heel strike):
 
