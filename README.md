@@ -297,13 +297,17 @@ The centroidal momentum **h**_G relates the full-body velocity to the 6D momentu
 \mathbf{h}_G = A_G(\mathbf{q})\mathbf{v} = \begin{bmatrix} \mathbf{k}_G \\ \mathbf{l}_G \end{bmatrix}
 ```
 
-where **k**_G is the angular momentum about the CoM, and **l**_G = m**c_dot** is the linear momentum. The centroidal dynamics (Newton-Euler at CoM) give:
+where $\mathbf{k}_G$ is the angular momentum about the CoM, and $\mathbf{l}_G = m\dot{\mathbf{c}}$ is the linear momentum. The $6 \times n_v$ matrix $A_G$ is the **Centroidal Momentum Matrix** — it maps generalized velocities to the 6D spatial momentum at the CoM frame. The centroidal dynamics (Newton-Euler at CoM) give:
 
 ```math
 \dot{\mathbf{h}}_G = \sum_i \mathbf{f}_i^{\mathrm{ext}} + \begin{bmatrix} \mathbf{0} \\ m\mathbf{g} \end{bmatrix}
 ```
 
-This 6D equation governs the overall balance of the robot — it is the foundation for the centroidal LQR controller (Layer 1).
+This 6D equation is the **fundamental balance law** for the humanoid: the rate of change of total momentum equals the sum of all external forces and gravity. For standing balance, $\dot{\mathbf{h}}_G \approx \mathbf{0}$, requiring the ground reaction forces to exactly cancel gravity. For walking, the angular momentum component $\dot{\mathbf{k}}_G$ oscillates as the swing leg's angular momentum transfers between phases.
+
+**Why the CMM matters for control:** The centroidal dynamics are **independent of the internal configuration** — they depend only on external forces and gravity. This makes them ideal for high-level balance planning: the centroidal LQR (Layer 1) plans the desired CoM trajectory and contact forces using this simple 6D model, while the whole-body QP (Layer 2) distributes these forces across the 34 joints.
+
+**Computational efficiency:** Computing $A_G$ requires O(N) body Jacobians and inertia transforms, totaling O(N²) operations for N bodies. For the THOR's 35 bodies, this is approximately 1225 6×6 matrix operations — computed once per control cycle.
 
 > **Reference:** Orin, D.E., Goswami, A. & Lee, S.-H. (2013). "Centroidal Dynamics of a Humanoid Robot." *Autonomous Robots*, 35(2-3), 161-176.
 
@@ -425,6 +429,8 @@ where D_i = sqrt(lambda_i^2 + w_i^2 + 2*eps^2).
 ### 7.1 Overview (Le Cleac'h et al. 2024)
 
 Contact-Implicit MPC embeds the LCP contact resolution **inside** the MPC optimization. Unlike traditional MPC that requires pre-specified contact schedules, CI-MPC discovers contacts automatically — the optimizer "decides" when and where to make contact.
+
+**The key challenge:** A naive nonlinear MPC over the full rigid-body dynamics with contact is computationally intractable — each evaluation of the dynamics requires an LCP solve (non-smooth), making gradient computation difficult. The breakthrough of Le Cleac'h et al. (2024) is to **linearize the dynamics around a reference trajectory** while keeping the LCP structure, converting the problem from a nonlinear program with complementarity constraints (MPCC) into a **Quadratic Program with Linear Complementarity Constraints** — which can be solved orders of magnitude faster using structure-exploiting interior-point methods.
 
 ### 7.2 MPC Optimization Problem
 
