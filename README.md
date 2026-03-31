@@ -994,6 +994,8 @@ print(f"CRBA+RNEA: {(time.perf_counter()-t0)/100*1000:.2f} ms/call")
 
 ---
 
+---
+
 ## License
 
 This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
