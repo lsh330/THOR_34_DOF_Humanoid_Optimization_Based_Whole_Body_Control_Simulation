@@ -639,7 +639,13 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 **Figure 9.** Energy conservation during free fall (500 ms, dt=1ms, no control). Left: KE/PE/Total decomposition showing energy exchange during acceleration under gravity. Right: Energy drift percentage — bounded within acceptable limits for semi-implicit Euler, confirming numerical stability of the 40-DOF integrator.
 
-### 9.10 Computational Performance
+### 9.10 Ground Reaction Force Profile
+
+![GRF Profile](docs/images/grf_profile.png)
+
+**Figure 12.** Vertical ground reaction force during CI-MPC standing (3 seconds). The force is normalized by body weight ($BW = mg = 659$ N). During static standing, the GRF is exactly 1.0 BW — the LCP contact solver correctly resolves the contact forces to balance gravity. The constant GRF profile confirms that the complementarity condition $\lambda \cdot w = 0$ is satisfied with $\lambda > 0$ (active contact) and $w = 0$ (zero contact velocity). During walking, the GRF would exhibit the characteristic **M-shaped double-hump curve** (first peak at heel strike, valley at midstance, second peak at push-off) described by Winter (1991) and Nilsson & Thorstensson (1989).
+
+### 9.11 Computational Performance
 
 ![Performance](docs/images/performance_benchmark.png)
 
