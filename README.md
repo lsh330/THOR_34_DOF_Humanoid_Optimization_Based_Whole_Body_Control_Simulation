@@ -577,7 +577,11 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ![THOR Structure](docs/images/thor_structure.png)
 
-**Figure 1.** THOR 34-DOF humanoid kinematic structure rendered as a stick figure in the default standing configuration. The front view (left) reveals the bilateral symmetry: both legs have identical 6-DOF chains (hip yaw/roll/pitch, knee pitch, ankle pitch/roll), and both arms have 7-DOF chains branching from the chest. The side view (right) shows the sagittal-plane posture with a natural knee bend (0.6 rad) and ankle compensation (-0.3 rad) that places the feet near ground level. Joint markers (black dots) indicate the 34 revolute joint locations, with the pelvis floating-base origin highlighted (red square).
+**Figure 1.** THOR 34-DOF humanoid kinematic structure rendered as a stick figure in the default standing configuration.
+
+The **front view** (left) reveals the bilateral symmetry of the kinematic tree: both legs have identical 6-DOF chains (hip yaw/roll/pitch → knee pitch → ankle pitch/roll), and both 7-DOF arm chains branch symmetrically from the chest through shoulder (pitch/roll/pitch) → elbow (yaw) → wrist (roll/yaw/pitch). The torso chain (waist yaw/pitch) connects the pelvis to the chest, providing 2 DOF of trunk articulation. The head (2 DOF) sits atop the chest. This branching tree structure is reflected in the block-diagonal pattern of the mass matrix (Figure 8): arms and legs form semi-independent subtrees with weak inter-branch coupling.
+
+The **side view** (right) shows the sagittal-plane standing posture: natural knee bend ($\theta_{\mathrm{knee}} = 0.6$ rad ≈ 34°) with ankle compensation ($\theta_{\mathrm{ankle}} = -0.3$ rad ≈ -17°) that places the feet near ground level while maintaining the CoM above the support polygon. This configuration is the equilibrium point for both the standing CI-MPC and the walking controller's initial/terminal poses. The 35 joint markers (black dots) and pelvis origin (red square) provide visual reference for the kinematic chain connectivity.
 
 ### 9.2 CI-MPC Standing Stability
 
@@ -698,7 +702,7 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 **Simulation rate:** ~300 Hz (3.3 ms/step), sufficient for 50 Hz MPC planning. The dominant cost is the CRBA mass matrix computation, which involves 35 × 7 = 245 spatial (6×6) matrix multiplications. Further speedup would require Numba JIT compilation of the RNEA/CRBA inner loops (expected ~5-10× improvement).
 
-### 9.11 Performance Summary
+### 9.12 Performance Summary
 
 | Metric | Standing (CI-MPC) | Walking (CTC) |
 |:---|:---|:---|
