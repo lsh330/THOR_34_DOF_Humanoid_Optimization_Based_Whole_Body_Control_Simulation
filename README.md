@@ -53,7 +53,7 @@ A from-scratch Python implementation of **Contact-Implicit Model Predictive Cont
 
 4. **104 automated tests** across 11 modules validating every theoretical component from spatial algebra to walking biomechanics, with visual evidence dashboard (12-panel plot)
 
-5. **250 Hz simulation rate** (4.01 ms/step) in pure Python/NumPy without JIT compilation, using Cholesky-optimized linear algebra
+5. **~300 Hz simulation rate** (~3.3 ms/step) in pure Python/NumPy without JIT compilation, using Cholesky-optimized linear algebra and cached spatial inertias
 
 ---
 
