@@ -34,11 +34,12 @@ def _compute_leg_targets(
     t: float,
     n_steps: int,
     q_stand_joints: NDArray,
-) -> tuple[NDArray, NDArray]:
+) -> NDArray:
     """Compute continuous joint targets for both legs.
 
-    Returns target joint angles for left and right leg pitch joints
-    (hip_p, kn_p, an_p) as deviations from standing configuration.
+    Returns:
+        q_target: (n_joints,) target joint angles including biomechanical
+        swing/stance deviations from standing configuration.
     """
     # Left leg pitch indices (in q[7:] space)
     L_HIP_P, L_KN_P, L_AN_P = 20, 21, 22
