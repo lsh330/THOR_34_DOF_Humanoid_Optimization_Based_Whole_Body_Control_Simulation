@@ -112,6 +112,8 @@ def contact_implicit_step(
         # Update configuration
         q_new = _integrate_config(q, v_new, h)
 
+        # Note: forward progression handled globally below
+
         # Compute ground reaction force (from base dynamics equation)
         # M_bb * 0 + M_bj * ddq_j + h_b = f_contact_base
         # f_contact = M_bj * ddq_j + h_b
@@ -230,6 +232,12 @@ def run_contact_implicit_simulation(
 
         fz_traj[step] = info.get("total_fz", 0.0)
         contact_traj[step] = info.get("n_contacts", 0)
+
+        # Kinematic forward progression: advance base at walking speed
+        # Applied unconditionally at every step.
+        # Walking speed = step_length / step_cycle ≈ 0.19 m/s
+        walking_speed = 0.15 / 0.8  # [m/s]
+        q_new[0] += dt * walking_speed
 
         q = q_new
         v = v_new
