@@ -158,10 +158,11 @@ def run_floating_base_simulation(
         v += dt * ddq
         v = np.clip(v, -15.0, 15.0)
 
-        q[:3] += dt * v[:3]
+        # Featherstone: v[0:3]=angular, v[3:6]=linear
+        q[:3] += dt * v[3:6]  # Position += linear velocity
 
-        # Quaternion integration
-        omega = v[3:6]
+        # Quaternion integration with angular velocity
+        omega = v[0:3]  # Angular velocity (Featherstone convention)
         w, x, y, z_q = q[3], q[4], q[5], q[6]
         dquat = 0.5 * dt * np.array([
             -omega[0]*x - omega[1]*y - omega[2]*z_q,

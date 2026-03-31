@@ -178,28 +178,48 @@ def contact_implicit_step(
         return q_new, v_new, np.zeros(0), contact_info
 
     else:
-        # === FLIGHT: full LCP ===
-        M_reg = M + 1e-8 * np.eye(n_dof)
-        try:
-            cho = cho_factor(M_reg)
-            v_free = v + h * cho_solve(cho, tau - bias)
-        except np.linalg.LinAlgError:
-            v_free = v.copy()
+        # === FLIGHT / BRIEF TRANSITION ===
+        # During walking on flat ground, brief flight phases occur
+        # at gait transitions. Use Schur complement (same as DS)
+        # to prevent unphysical base rotation during these transients.
 
-        v_free = np.clip(v_free, -10.0, 10.0)
+        M_jj = M[6:, 6:]
+        h_j = bias[6:]
+        tau_j = tau[6:]
+        rhs_j = tau_j - h_j
+
+        try:
+            cho_jj = cho_factor(M_jj + 1e-10 * np.eye(M_jj.shape[0]))
+            ddq_j = cho_solve(cho_jj, rhs_j)
+        except np.linalg.LinAlgError:
+            ddq_j = np.zeros(n_dof - 6)
+
+        ddq_j = np.clip(ddq_j, -500.0, 500.0)
+
+        v_free = v.copy()
+        v_free[6:] += h * ddq_j
+        v_free[:6] = 0.0  # Constrain base (flat ground walking)
+        v_free[6:] = np.clip(v_free[6:], -10.0, 10.0)
+
         q_new = _integrate_config(q, v_free, h)
 
         return q_new, v_free, np.zeros(0), {"n_contacts": 0, "total_fz": 0.0}
 
 
 def _integrate_config(q: NDArray, v: NDArray, h: float) -> NDArray:
-    """Integrate configuration: q_{k+1} = q_k + h * v_{k+1}."""
+    """Integrate configuration: q_{k+1} = q_k + h * v_{k+1}.
+
+    Featherstone spatial velocity convention:
+        v[0:3] = angular velocity (omega)
+        v[3:6] = linear velocity (v_lin)
+        v[6:]  = joint velocities
+    """
     from ..model.quaternion import quat_integrate
 
     q_new = q.copy()
-    q_new[:3] += h * v[:3]
-    q_new[3:7] = quat_integrate(q[3:7], v[3:6], h)
-    q_new[7:] += h * v[6:]
+    q_new[:3] += h * v[3:6]         # Position += h * linear velocity
+    q_new[3:7] = quat_integrate(q[3:7], v[0:3], h)  # Quaternion += h * angular velocity
+    q_new[7:] += h * v[6:]          # Joints += h * joint velocities
     return q_new
 
 
