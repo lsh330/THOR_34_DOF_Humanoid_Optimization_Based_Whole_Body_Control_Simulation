@@ -607,7 +607,8 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 | Free-fall ddq[5] | -9.810 m/s^2 (exact) |
 | LCP solver | FB-Newton, ~5 iterations, residual < 1e-6 |
 | Cholesky speedup | **37% faster** than LU solve |
-| Tests | 13/13 passing (0.66 s) |
+| CRBA-RNEA max error | **2.27 × 10⁻¹³ N·m** (machine epsilon) |
+| Tests | **100/100 passing** (2.29 s, 10 modules) |
 
 ---
 
