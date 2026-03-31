@@ -741,6 +741,24 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 +================================================================+
 ```
 
+**Layer 1 — Centroidal LQR (LIPM):** Uses the Linear Inverted Pendulum Model to regulate CoM position:
+
+```math
+\ddot{c}_x = \frac{g}{z_0}(c_x - p_{\mathrm{ZMP},x})
+```
+
+where $z_0$ is the nominal CoM height and $p_{\mathrm{ZMP}}$ is the Zero Moment Point. This 2D system is stabilized by LQR feedback on $[c, \dot{c}]$ via the Continuous Algebraic Riccati Equation (CARE).
+
+**Layer 2 — Whole-Body QP:** Distributes the centroidal reference across 34 joints:
+
+```math
+\min_{\ddot{\mathbf{q}}, \boldsymbol{\tau}, \mathbf{f}_c} \sum_i w_i \lVert J_i \ddot{\mathbf{q}} + \dot{J}_i \mathbf{v} - \ddot{\mathbf{x}}_i^{\mathrm{des}} \rVert^2 + w_{\mathrm{reg}} \lVert \boldsymbol{\tau} \rVert^2
+```
+
+subject to the equations of motion, friction cones ($\lVert \mathbf{f}_t \rVert \leq \mu f_n$), and actuator limits ($\tau_{\min} \leq \boldsymbol{\tau} \leq \tau_{\max}$).
+
+**Layer 3 — Joint PD + CTC:** For walking, uses Computed Torque Control (Section 8.3) with $\boldsymbol{\tau} = M_{jj}\ddot{\mathbf{q}}_{\mathrm{des}} + \mathbf{h}_j$. For standing, gravity compensation $\boldsymbol{\tau} = \mathbf{g}(\mathbf{q})$ with PD feedback suffices.
+
 ---
 
 ## 11. Testing
