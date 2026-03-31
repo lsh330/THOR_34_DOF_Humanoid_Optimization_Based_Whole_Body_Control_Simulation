@@ -127,7 +127,9 @@ where `[p]_x` is the 3x3 skew-symmetric matrix of **p**:
 [\mathbf{p}]_\times = \begin{bmatrix} 0 & -p_z & p_y \\ p_z & 0 & -p_x \\ -p_y & p_x & 0 \end{bmatrix}
 ```
 
-This transform maps motion vectors: **v**_B = X_BA **v**_A. Force vectors transform via the transpose: **f**_A = X_BA^T **f**_B.
+This 6×6 transform maps motion vectors between frames: $\mathbf{v}_B = X_{BA} \mathbf{v}_A$. Force vectors transform via the transpose: $\mathbf{f}_A = X_{BA}^T \mathbf{f}_B$. This duality preserves the power invariant $\mathbf{f}^T \mathbf{v}$ across frame changes — the fundamental requirement for energy-consistent dynamics.
+
+**Structure of the spatial transform:** The upper-left 3×3 block $R$ rotates the angular velocity component. The lower-left block $-R[\mathbf{p}]_\times$ captures the **velocity coupling** due to translation: a pure rotation at the origin creates a linear velocity at a displaced point (the familiar $\mathbf{v} = \boldsymbol{\omega} \times \mathbf{r}$ relation).
 
 ### 3.3 Spatial Inertia
 
