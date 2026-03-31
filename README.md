@@ -494,7 +494,7 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ## 9. Simulation Results
 
-### 8.1 Robot Structure
+### 9.1 Robot Structure
 
 ![THOR Structure](docs/images/thor_structure.png)
 
@@ -506,7 +506,7 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 **Figure 2.** CI-MPC standing (3s, dt=2ms). CoM deviation < 1.6mm, confirming LCP contact resolution balances the 67.2 kg robot without visible oscillation.
 
-### 8.3 Detailed CI-MPC Analysis
+### 9.3 Detailed CI-MPC Analysis
 
 ![CI-MPC Detailed Analysis](docs/images/ci_mpc_detailed.png)
 
@@ -524,13 +524,13 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 - **Bottom-right (CoM Vertical Stability):** Zoomed view of the CoM z-deviation from mean during the steady-state phase (t > 1s). The oscillation amplitude is less than ±3 mm, with a standard deviation of 1.57 mm. This level of stability is comparable to hardware results reported in the literature for torque-controlled humanoids (e.g., Talos: ~5 mm CoM tracking error in Dantec et al. 2021).
 
-### 8.4 Walking Animation
+### 9.4 Walking Animation
 
 ![THOR Walking GIF](docs/images/thor_walking.gif)
 
 **Figure 4.** Animated dual-view of the THOR humanoid during walking simulation (4 steps, 3.4 seconds). The front view (left) shows the leg chains alternately flexing and extending as the robot steps. The side view (right) reveals the sagittal-plane hip/knee/ankle coordination: during the swing phase, the hip flexes forward while the knee bends to clear the ground, then both extend for touchdown. The gait phase is displayed in the title overlay (DS = double support, L/R Swing = left/right leg swing). The CoM height oscillation (~2 cm per step) is visible in the body center movement.
 
-### 8.5 Walking Dynamics Analysis
+### 9.5 Walking Dynamics Analysis
 
 ![Walking Analysis](docs/images/walking_analysis.png)
 
@@ -544,7 +544,7 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 - **Bottom-right (Active Contacts):** Both feet maintain contact throughout (n=2). In the current implementation, the constrained-base formulation keeps both feet near ground. A fully unconstrained floating-base walking simulation would show contact transitions (2→1→2→1→...) corresponding to the gait cycle.
 
-### 8.6 Joint Trajectories During Walking
+### 9.6 Joint Trajectories During Walking
 
 ![Joint Trajectories](docs/images/walking_joint_trajectories.png)
 
@@ -562,13 +562,13 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 - **an_r (Ankle Roll):** Near zero throughout — no lateral ankle motion in sagittal walking. This degree of freedom becomes active in 3D walking for terrain adaptation.
 
-### 8.7 CoM Trajectory Analysis
+### 9.7 CoM Trajectory Analysis
 
 ![CoM Trajectory](docs/images/com_trajectory_walking.png)
 
 **Figure 7.** Center of mass trajectory projected onto the x-z (sagittal) plane during walking. Color encodes time progression (dark purple = start, bright yellow = end). The trajectory shows characteristic features of bipedal walking: vertical oscillation of ~2 cm per step cycle (CoM rises during mid-stance as the inverted pendulum sweeps over the stance foot, then drops during double support transitions). The forward progression along x is minimal in this stepping simulation, but the vertical oscillation pattern is clearly visible and physically correct.
 
-### 8.8 Mass Matrix Structure
+### 9.8 Mass Matrix Structure
 
 ![Mass Matrix](docs/images/mass_matrix_analysis.png)
 
@@ -667,7 +667,7 @@ $ python -m pytest thor/tests/ -v
 | `test_contact.py` | 6 | No-contact above ground, force proportional, damping, friction, no adhesion, CI stability |
 | `test_jacobian.py` | 4 | Numerical Jacobian verification, pelvis structure, shape, CoM bounds |
 
-### 10.2 Key Cross-Validation: CRBA vs RNEA
+### 11.2 Key Cross-Validation: CRBA vs RNEA
 
 The most critical test verifies that two independently implemented O(N) algorithms produce consistent results:
 
