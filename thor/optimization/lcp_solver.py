@@ -18,6 +18,8 @@ Reference:
     Optimization, 24(3-4), 269-284.
 """
 
+import math
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -30,7 +32,7 @@ def fischer_burmeister(a: float, b: float, eps: float = 1e-10) -> float:
     phi(a,b) = 0 iff a >= 0, b >= 0, a*b ≈ 0 (exact as eps→0).
     Smooth and differentiable everywhere (unlike min(a,b)).
     """
-    return a + b - np.sqrt(a * a + b * b + 2.0 * eps * eps)
+    return a + b - math.sqrt(a * a + b * b + 2.0 * eps * eps)
 
 
 def solve_lcp_fb_newton(
@@ -79,7 +81,7 @@ def solve_lcp_fb_newton(
         # Jacobian: dF_i/dz_j
         J = np.empty((n, n))
         for i in range(n):
-            denom = np.sqrt(z[i]**2 + w[i]**2 + 2.0 * eps**2)
+            denom = math.sqrt(z[i]**2 + w[i]**2 + 2.0 * eps**2)
             da = 1.0 - z[i] / denom   # d(phi)/d(a) where a=z_i
             db = 1.0 - w[i] / denom   # d(phi)/d(b) where b=w_i
             for j in range(n):
@@ -97,8 +99,9 @@ def solve_lcp_fb_newton(
         for _ in range(15):
             z_new = z + alpha * dz
             w_new = M @ z_new + q
-            F_new = np.array([fischer_burmeister(z_new[i], w_new[i], eps)
-                              for i in range(n)])
+            F_new = np.empty(n)
+            for i in range(n):
+                F_new[i] = fischer_burmeister(z_new[i], w_new[i], eps)
             if np.linalg.norm(F_new) < res:
                 break
             alpha *= 0.5
