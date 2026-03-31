@@ -388,7 +388,7 @@ Contact-Implicit MPC embeds the LCP contact resolution **inside** the MPC optimi
 ### 7.2 MPC Optimization Problem
 
 ```math
-\min_{\mathbf{v}_{1:T},\, \mathbf{q}_{1:T},\, \mathbf{u}_{0:T-1},\, \boldsymbol{\lambda}_{0:T-1}} \;\; \sum_{k=0}^{T-1} \left[ \|\mathbf{q}_k - \mathbf{q}_k^{\mathrm{ref}}\|^2_{Q_q} + \|\mathbf{v}_k - \mathbf{v}_k^{\mathrm{ref}}\|^2_{Q_v} + \|\mathbf{u}_k\|^2_R \right]
+\min_{\mathbf{v}_{1:T},\, \mathbf{q}_{1:T},\, \mathbf{u}_{0:T-1},\, \boldsymbol{\lambda}_{0:T-1}} \;\; \sum_{k=0}^{T-1} \left[ \lVert\mathbf{q}_k - \mathbf{q}_k^{\mathrm{ref}}\rVert^2_{Q_q} + \lVert\mathbf{v}_k - \mathbf{v}_k^{\mathrm{ref}}\rVert^2_{Q_v} + \lVert\mathbf{u}_k\rVert^2_R \right]
 ```
 
 subject to the **contact-implicit dynamics** at each horizon step:
@@ -500,11 +500,11 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 **Figure 1.** THOR 34-DOF humanoid kinematic structure rendered as a stick figure in the default standing configuration. The front view (left) reveals the bilateral symmetry: both legs have identical 6-DOF chains (hip yaw/roll/pitch, knee pitch, ankle pitch/roll), and both arms have 7-DOF chains branching from the chest. The side view (right) shows the sagittal-plane posture with a natural knee bend (0.6 rad) and ankle compensation (-0.3 rad) that places the feet near ground level. Joint markers (black dots) indicate the 34 revolute joint locations, with the pelvis floating-base origin highlighted (red square).
 
-### 8.2 Standing Animation
+### 9.2 CI-MPC Standing Stability
 
 ![THOR Standing GIF](docs/images/thor_standing.gif)
 
-**Figure 2.** Animated visualization of the THOR humanoid during Contact-Implicit MPC standing simulation (3 seconds, dt = 2 ms). Both views update in real-time showing the robot maintaining its standing posture with sub-millimeter CoM stability. The title overlay displays the instantaneous CoM height and contact force. The robot structure remains rigid throughout — a visual confirmation that the gravity compensation + LCP contact resolution successfully balances the 67.2 kg robot against gravity without any visible oscillation.
+**Figure 2.** CI-MPC standing (3s, dt=2ms). CoM deviation < 1.6mm, confirming LCP contact resolution balances the 67.2 kg robot without visible oscillation.
 
 ### 8.3 Detailed CI-MPC Analysis
 
