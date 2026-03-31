@@ -763,6 +763,18 @@ subject to the equations of motion, friction cones ($\lVert \mathbf{f}_t \rVert 
 
 ## 11. Testing
 
+### Testing Philosophy
+
+The test suite is designed around three verification principles:
+
+1. **Mathematical identity tests:** Verify that independently implemented algorithms produce identical results. The flagship test is CRBA-RNEA cross-validation ($M\ddot{\mathbf{q}} + \mathbf{h} = \text{RNEA}$) at 10 random configurations — this catches subtle sign errors, index mismatches, and spatial algebra bugs that would otherwise produce plausible but incorrect dynamics.
+
+2. **Physical invariant tests:** Verify properties that must hold by physics: rotation matrices have det=1, spatial inertia is SPD, gravitational force equals $mg$, energy is conserved in conservative systems, and contact forces satisfy complementarity.
+
+3. **Biomechanical range tests:** Verify that walking joint trajectories stay within physiologically valid ranges (Winter 1991, Perry 1992), and that the gait timing matches human walking data at 0.5 m/s.
+
+4. **Performance regression tests:** Ensure computational speed stays within real-time bounds (CRBA < 50ms, full step < 20ms), preventing accidental performance degradation.
+
 ```bash
 $ python -m pytest thor/tests/ -v
 ========================= 104 passed in 1.77s =========================
