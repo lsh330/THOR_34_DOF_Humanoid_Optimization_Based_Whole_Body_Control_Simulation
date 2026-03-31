@@ -337,7 +337,15 @@ M(\mathbf{q}_k)(\mathbf{v}_{k+1} - \mathbf{v}_k) = h[-C(\mathbf{q}_k, \mathbf{v}
 \mathbf{q}_{k+1} = \mathbf{q}_k + h\,\mathbf{v}_{k+1}
 ```
 
-where h is the time step, and **lambda**_n are normal contact impulses (force x time).
+where $h$ is the time step, and $\boldsymbol{\lambda}_n$ are normal contact impulses (force × time). The velocity-level formulation (rather than position-level) is crucial: it handles simultaneous impacts correctly and avoids the need for event detection. The implicit Euler structure ensures unconditional stability — unlike explicit methods that require $h < 2/\omega_{\max}$ for stiff contact.
+
+**Friction model:** The Coulomb friction law $\lVert \mathbf{f}_t \rVert \leq \mu f_n$ (tangential force bounded by friction cone) is approximated by a **polyhedral cone** with $n_f$ facets:
+
+```math
+\boldsymbol{\lambda}_t = \sum_{i=1}^{n_f} \beta_i \mathbf{d}_i, \quad \beta_i \geq 0
+```
+
+where $\mathbf{d}_i$ are unit vectors equally spaced around the friction cone boundary. We use $n_f = 8$ (octagonal approximation), which provides $< 4\%$ error relative to the true circular cone.
 
 ### 6.3 Signorini Complementarity Condition
 
