@@ -881,6 +881,10 @@ print(f'CoM stability: {result[\"com\"][len(result[\"com\"])//2:, 2].std()*1000:
 13. Spong, M.W., Hutchinson, S. & Vidyasagar, M. (2005). *Robot Modeling and Control*. Wiley.
 14. Winter, D.A. (1991). *Biomechanics and Motor Control of Human Movement*. Wiley.
 15. Luh, J.Y.S., Walker, M.W. & Paul, R.P.C. (1980). "On-Line Computational Scheme for Mechanical Manipulators." *ASME J. Dyn. Sys.*, 102(2), 69-76.
+16. Nilsson, J. & Thorstensson, A. (1989). "Ground reaction forces at different speeds of human walking and running." *Acta Physiologica Scandinavica*, 136(2), 217-227.
+17. Dantec, E. et al. (2021). "Whole Body Model Predictive Control with a Memory of Motion." *IEEE ICRA*.
+18. Perry, J. (1992). *Gait Analysis: Normal and Pathological Function*. SLACK Inc.
+19. Baumgarte, J. (1972). "Stabilization of constraints and integrals of motion." *Computer Methods in Applied Mechanics*, 1(1), 1-16.
 
 ---
 
