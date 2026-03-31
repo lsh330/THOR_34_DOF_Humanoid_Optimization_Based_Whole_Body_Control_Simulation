@@ -166,6 +166,16 @@ where each term is:
 | J_c | n_c x n_v | Contact Jacobian (maps velocities to contact-point velocities) |
 | **f**_c | n_c | Contact forces (resolved by LCP) |
 
+**Physical interpretation of each term:**
+
+- The left-hand side $M\dot{\mathbf{v}}$ represents the **generalized inertia forces** — how the robot's mass distribution resists acceleration. For the THOR at 40 DOF, this is a 40×40 coupled system where accelerating any single joint creates reaction forces throughout the kinematic tree.
+
+- The bias term $\mathbf{h}$ encodes two physical effects: (1) **Coriolis/centrifugal forces** $C\mathbf{v}$ arising from the motion of rotating frames (these vanish at zero velocity), and (2) **gravitational forces** $\mathbf{g}(\mathbf{q})$ pulling each link downward according to its mass and height.
+
+- The actuation term $S^T\boldsymbol{\tau}$ maps the 34 joint torques into the 40-dimensional generalized force space. The selection matrix $S$ has zero rows for the 6 floating-base DOFs — the pelvis cannot be directly actuated, only indirectly through ground reaction forces.
+
+- The contact term $J_c^T\mathbf{f}_c$ maps Cartesian contact forces at the feet into generalized coordinates via the **transpose Jacobian**. This is the principle of virtual work: the generalized force due to a Cartesian force equals $J^T\mathbf{f}$.
+
 ### 4.2 Block Structure
 
 The mass matrix has a 2x2 block structure separating the floating base (b) and joints (j):
@@ -257,7 +267,11 @@ M_{ii} = S_i^T I_i^c S_i \qquad \text{(diagonal: effective inertia seen by joint
 M_{ij} = S_j^T \mathbf{F}_i \qquad \text{(off-diagonal: coupling, } \mathbf{F}_i \text{ propagated up the chain)}
 ```
 
-**Verification:** For our THOR model, M(q) is 40x40, symmetric, positive-definite, with M[3:6, 3:6] = 67.2 * I_3 (total mass on translational diagonal).
+**Physical interpretation:** The diagonal element $M_{ii}$ is the **effective inertia** felt by joint $i$ when all other joints are locked — it combines the rotational inertia of all bodies distal to joint $i$ about joint $i$'s axis. The off-diagonal element $M_{ij}$ captures the **dynamic coupling**: accelerating joint $j$ creates a reaction torque at joint $i$ due to the shared inertia of bodies between them in the kinematic tree.
+
+**Complexity:** Pass 1 is O(N), and Pass 2 is O(N·d) where d is the tree depth. For a humanoid with branching (arms, legs), d is typically 6-8, making the total cost approximately O(N·d) ≈ O(35·7) = O(245) matrix operations.
+
+**Verification:** For our THOR model, M(q) is 40×40, symmetric (verified: $\|M - M^T\| < 10^{-8}$), positive-definite (minimum eigenvalue > 0 at all tested configurations), with the translational block $M[3:6, 3:6] = 67.2 \cdot I_3$ (total mass on diagonal — a fundamental sanity check).
 
 ### 5.3 Centroidal Momentum Matrix (Orin et al. 2013)
 
@@ -349,7 +363,12 @@ The Delassus matrix A is the **apparent compliance** at contact points — it ma
 \text{Find } \boldsymbol{\lambda}_n \geq 0 : \quad \mathbf{w} = A\boldsymbol{\lambda}_n + \mathbf{q}_{\text{LCP}} \geq 0, \quad \boldsymbol{\lambda}_n^T \mathbf{w} = 0
 ```
 
-The Delassus matrix A represents the **apparent compliance** at the contact points: how much the contact velocity changes per unit impulse. It is always positive semi-definite (since M is positive definite), guaranteeing a solution exists.
+**Physical meaning of the LCP:** The three conditions encode fundamental contact physics:
+1. $\boldsymbol{\lambda}_n \geq 0$: Contact can only **push** (compression), never pull (adhesion).
+2. $\mathbf{w} \geq 0$: Contact points cannot **interpenetrate** (non-penetration).
+3. $\boldsymbol{\lambda}_n^T \mathbf{w} = 0$: Contact force is nonzero **only when** the gap is zero (complementarity — either the foot is touching with force, or it is free with no force, but never both).
+
+This formulation is the mathematical core of **Contact-Implicit** methods: the LCP automatically discovers which contacts are active without pre-specification. For walking, this means the optimizer "decides" when to lift a foot ($\lambda = 0$, $w > 0$) and when to push off ($\lambda > 0$, $w = 0$).
 
 ### 6.5 Fischer-Burmeister NCP Solver
 
@@ -458,7 +477,11 @@ Since $M_{jj}$ is invertible (positive definite), we get $\ddot{\mathbf{q}} = \d
 \ddot{\mathbf{e}} + K_d \dot{\mathbf{e}} + K_p \mathbf{e} = \mathbf{0}
 ```
 
-which is a stable linear system (all eigenvalues in the left half-plane for $K_p, K_d > 0$).
+which is a **stable, decoupled, linear system**. For $K_p, K_d > 0$, all eigenvalues lie in the left half-plane, guaranteeing exponential convergence $\mathbf{e}(t) \to 0$.
+
+**Why the naive approach fails:** A simpler controller $\boldsymbol{\tau} = \mathbf{g}(\mathbf{q}) + K_p\mathbf{e} + K_d\dot{\mathbf{e}}$ (gravity compensation + PD) does NOT cancel the Coriolis terms $C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}}$. During walking, these velocity-dependent forces grow as joint velocities increase, eventually balancing the PD terms at a drifted configuration — creating a **false equilibrium** where the joints freeze mid-motion. The computed torque approach eliminates this by pre-multiplying $\ddot{\mathbf{q}}_{\mathrm{des}}$ with $M_{jj}$, which absorbs all nonlinear dynamics into the feedforward term $\mathbf{h}_j$.
+
+**Gain selection:** We use $K_p = 600$ rad/s² and $K_d = 60$ rad/s for leg joints (critically damped second-order response with natural frequency $\omega_n = \sqrt{K_p} \approx 24.5$ rad/s, damping ratio $\zeta = K_d / (2\omega_n) \approx 1.2$). The slight overdamping ($\zeta > 1$) prevents overshoot during gait transitions.
 
 > **Reference:** Spong, M.W., Hutchinson, S. & Vidyasagar, M. (2005). *Robot Modeling and Control*, Ch. 8.
 
