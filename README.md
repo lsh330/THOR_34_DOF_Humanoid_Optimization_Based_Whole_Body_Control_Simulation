@@ -586,7 +586,13 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 **Figure 9.** Energy conservation during free fall (500 ms, dt=1ms, no control). Left: KE/PE/Total decomposition showing energy exchange during acceleration under gravity. Right: Energy drift percentage — bounded within acceptable limits for semi-implicit Euler, confirming numerical stability of the 40-DOF integrator.
 
-### 9.10 Performance Summary
+### 9.10 Computational Performance
+
+![Performance](docs/images/performance_benchmark.png)
+
+**Figure 11.** Per-component timing benchmark (Python/NumPy). CRBA: 1.61ms, RNEA: 1.81ms, LCP: 0.15ms, full step: 4.01ms. Achieves **250 Hz** simulation rate without JIT compilation.
+
+### 9.11 Performance Summary
 
 | Metric | Standing (CI-MPC) | Walking (CTC) |
 |:---|:---|:---|
