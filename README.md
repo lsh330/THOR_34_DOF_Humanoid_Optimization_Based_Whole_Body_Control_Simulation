@@ -159,12 +159,12 @@ where each term is:
 
 | Symbol | Dimension | Description |
 |:---|:---|:---|
-| M(**q**) | n_v x n_v | Joint-space inertia matrix (symmetric, positive-definite) |
-| **h**(**q**,**v**) | n_v | Bias forces: Coriolis + centrifugal + gravity |
-| S | n_a x n_v | Actuation selection matrix: S = [0, I_34] |
-| **tau** | n_a = 34 | Actuated joint torques |
-| J_c | n_c x n_v | Contact Jacobian (maps velocities to contact-point velocities) |
-| **f**_c | n_c | Contact forces (resolved by LCP) |
+| $M(\mathbf{q})$ | $n_v \times n_v$ | Joint-space inertia matrix (symmetric, positive-definite) |
+| $\mathbf{h}(\mathbf{q}, \mathbf{v})$ | $n_v$ | Bias forces: Coriolis + centrifugal + gravity |
+| $S$ | $n_a \times n_v$ | Actuation selection: $S = [0_{34 \times 6},\; I_{34}]$ |
+| $\boldsymbol{\tau}$ | $n_a = 34$ | Actuated joint torques |
+| $J_c$ | $n_c \times n_v$ | Contact Jacobian |
+| $\mathbf{f}_c$ | $n_c$ | Contact forces (resolved by LCP) |
 
 **Physical interpretation of each term:**
 
