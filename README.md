@@ -686,7 +686,17 @@ with $\theta_0 = 5°$ (near extension) and $\theta_{\mathrm{peak}} = 45°$. The 
 
 ![Performance](docs/images/performance_benchmark.png)
 
-**Figure 11.** Per-component timing benchmark (Python/NumPy). CRBA: 1.61ms, RNEA: 1.81ms, LCP: 0.15ms, full step: 4.01ms. Achieves **250 Hz** simulation rate without JIT compilation.
+**Figure 13.** Per-component timing benchmark (Python/NumPy, no JIT compilation). After spatial algebra optimization (math.cos/sin, np.empty, direct element assignment):
+
+| Component | Time | Operations | Complexity |
+|:---|---:|:---|:---|
+| CRBA (mass matrix) | **1.42 ms** | 35-body composite inertia + M extraction | O(Nd) ≈ O(245) |
+| RNEA (inverse dynamics) | **1.64 ms** | 35-body forward + backward pass | O(N) = O(35) |
+| LCP (contact solver) | **0.15 ms** | 2×2 Fischer-Burmeister Newton (~5 iter) | O(n_c² · k) |
+| Cholesky solve (34×34) | **0.3 ms** | cho_factor + cho_solve | O(n³/3) |
+| **Full step** | **4.01 ms** | CRBA + RNEA + LCP + Cholesky + integration | — |
+
+**Simulation rate:** 250 Hz (4.01 ms/step), sufficient for 50 Hz MPC planning. The dominant cost is the CRBA mass matrix computation, which involves 35 × 7 = 245 spatial (6×6) matrix multiplications. Further speedup would require Numba JIT compilation of the RNEA/CRBA inner loops (expected ~5-10× improvement).
 
 ### 9.11 Performance Summary
 
