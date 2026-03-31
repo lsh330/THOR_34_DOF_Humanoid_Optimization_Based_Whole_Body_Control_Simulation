@@ -943,6 +943,11 @@ thor/                              ~5,000 LOC, 30+ source files
       +-- test_contact.py          Contact dynamics (6)
       +-- test_integration.py      Config, integration (5)
       +-- test_jacobian.py         Numerical Jacobian (4)
+      +-- test_spatial_advanced.py Transform chain, Jacobi (11)
+      +-- test_fk_accuracy.py     FK geometry validation (6)
+      +-- test_centroidal_advanced.py CMM properties (5)
+      +-- test_lcp_convergence.py  Solver convergence (7)
+      +-- test_forward_progression.py Walking verification (4)
 ```
 
 ---
