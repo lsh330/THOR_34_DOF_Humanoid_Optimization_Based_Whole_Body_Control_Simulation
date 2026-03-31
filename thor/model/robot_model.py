@@ -262,7 +262,7 @@ class RobotModel:
         "links", "n_bodies", "n_joints", "n_dof",
         "parent", "joint_types", "joint_axes",
         "_joint_name_to_idx", "total_mass",
-        "foot_link_ids",
+        "foot_link_ids", "spatial_inertias",
     )
 
     def __init__(self) -> None:
@@ -289,6 +289,12 @@ class RobotModel:
             self._joint_name_to_idx.get("l_leg_an_r", -1),
             self._joint_name_to_idx.get("r_leg_an_r", -1),
         )
+
+        # Cache spatial inertias (constant, computed once at model load)
+        from ..core.spatial import spatial_inertia
+        self.spatial_inertias = [
+            spatial_inertia(l.mass, l.com, l.inertia) for l in self.links
+        ]
 
     def joint_index(self, name: str) -> int:
         """Get joint/body index by name."""

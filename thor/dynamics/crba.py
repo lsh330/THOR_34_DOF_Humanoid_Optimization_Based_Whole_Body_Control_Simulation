@@ -46,8 +46,7 @@ def crba(model: RobotModel, q: NDArray) -> NDArray:
     I_c = []  # Composite inertias (mutable copies)
 
     for i in range(n):
-        link = model.links[i]
-        I_c.append(spatial_inertia(link.mass, link.com, link.inertia))
+        I_c.append(model.spatial_inertias[i].copy())  # Use cached, copy for mutation
 
     # Compute parent-to-child transforms
     R_base = quat_to_rot(q[3:7])

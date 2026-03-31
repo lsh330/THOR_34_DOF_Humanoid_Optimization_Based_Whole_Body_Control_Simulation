@@ -79,9 +79,8 @@ def rnea(
     f = [np.zeros(6) for _ in range(n)]
     X_up = [np.eye(6) for _ in range(n)]
 
-    # Precompute spatial inertias (once per call)
-    I_s = [spatial_inertia(model.links[i].mass, model.links[i].com,
-                            model.links[i].inertia) for i in range(n)]
+    # Use cached spatial inertias from model (no recomputation)
+    I_s = model.spatial_inertias
 
     # === Forward pass: velocities and accelerations ===
 
