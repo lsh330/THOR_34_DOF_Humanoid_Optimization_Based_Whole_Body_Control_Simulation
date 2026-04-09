@@ -376,7 +376,11 @@ CI-MPC는 LCP 접촉 해석을 MPC 최적화 안에 내장하여 접촉 일정�
 
 **MPC 최적화 문제:**
 
-결정 변수: $\mathbf{q}_{1:T}$, $\mathbf{v}_{1:T}$, $\mathbf{u}_{0:T-1}$, $\boldsymbol{\lambda}_{0:T-1}$
+**결정 변수:**
+
+```math
+\mathbf{q}_{1:T}, \quad \mathbf{v}_{1:T}, \quad \mathbf{u}_{0:T-1}, \quad \boldsymbol{\lambda}_{0:T-1}
+```
 
 ```math
 J = \sum_{k=0}^{T-1} \bigl[ \lVert \mathbf{q}_k - \mathbf{q}_k^{\mathrm{ref}} \rVert_{Q_q}^{2} + \lVert \mathbf{v}_k - \mathbf{v}_k^{\mathrm{ref}} \rVert_{Q_v}^{2} + \lVert \mathbf{u}_k \rVert_{R}^{2} \bigr]
