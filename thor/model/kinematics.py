@@ -12,6 +12,13 @@ The velocity vector v has the structure:
 
 Reference:
     Featherstone, R. (2008). Ch. 4: Forward Kinematics.
+
+JIT dispatch:
+    com_position() attempts to use the Numba-compiled kernels from
+    kinematics_jit.py when _USE_JIT=True (default).  On any failure it
+    silently falls back to the pure-Python path.
+    body_jacobian() is NOT JIT-compiled because it uses np.linalg.inv,
+    which requires careful handling outside nopython mode.
 """
 
 import math
@@ -19,6 +26,9 @@ from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
+
+# Set to False to disable JIT dispatch (useful for debugging)
+_USE_JIT: bool = True
 
 from ..core.spatial import (
     spatial_transform, rot_x, rot_y, rot_z,
@@ -111,14 +121,58 @@ def body_position(X_world_i: NDArray) -> NDArray:
     return p
 
 
-def com_position(q: NDArray, model: RobotModel) -> NDArray:
+def com_position(q: NDArray, model: RobotModel,
+                 X_world_cache: Optional[list] = None) -> NDArray:
     """Compute center of mass position in world frame.
 
-    c = (1/M) * sum_i m_i * p_i
+    c = (1/M) * sum_i m_i * (p_i + R_i @ com_body_i)
 
-    where p_i is the world position of body i's center of mass.
+    Dispatches to the Numba JIT version (forward_kinematics_jit +
+    com_position_jit) when _USE_JIT=True and X_world_cache is None.
+    Falls back to the pure-Python path on any failure or when a pre-computed
+    X_world cache is supplied (avoids redundant FK computation).
+
+    Args:
+        q: Configuration [p_base(3), quat_base(4), q_joints(N-1)].
+        model: Robot model.
+        X_world_cache: Optional pre-computed world transforms list (Python).
+                       When provided, JIT path is skipped and the cache is used.
+
+    Returns:
+        com: (3,) CoM position in world frame [m].
     """
-    X_world, _ = forward_kinematics(q, model)
+    if _USE_JIT and X_world_cache is None:
+        try:
+            from .kinematics_jit import (  # noqa: PLC0415
+                forward_kinematics_jit,
+                com_position_jit,
+            )
+            md = model.model_data
+            X_buf = np.zeros((md.n_bodies, 6, 6), dtype=np.float64)
+            forward_kinematics_jit(
+                md.n_bodies,
+                md.parent,
+                md.joint_types,
+                md.joint_offsets,
+                md.joint_rotations,
+                np.asarray(q, dtype=np.float64),
+                X_buf,
+            )
+            return com_position_jit(
+                md.n_bodies,
+                model.total_mass,
+                md.masses,
+                md.coms,
+                X_buf,
+            )
+        except Exception:
+            pass
+
+    # Pure-Python fallback
+    if X_world_cache is not None:
+        X_world = X_world_cache
+    else:
+        X_world, _ = forward_kinematics(q, model)
 
     com = np.zeros(3)
     for i in range(model.n_bodies):

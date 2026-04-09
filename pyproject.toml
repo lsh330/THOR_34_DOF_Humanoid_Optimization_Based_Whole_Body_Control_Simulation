@@ -39,3 +39,6 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["thor/tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]

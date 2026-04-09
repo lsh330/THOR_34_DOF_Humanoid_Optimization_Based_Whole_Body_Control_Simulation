@@ -33,6 +33,9 @@ from ..core.constants import GRAVITY_VEC
 from ..model.robot_model import RobotModel
 from ..model.joint_types import JointType
 
+# Set to False to force pure-Python fallback (for debugging)
+_USE_JIT = True
+
 
 def rnea(
     model: RobotModel,
@@ -42,6 +45,54 @@ def rnea(
     f_ext: NDArray | None = None,
 ) -> NDArray:
     """Recursive Newton-Euler Algorithm.
+
+    Dispatches to the Numba JIT implementation when available and
+    f_ext is None; otherwise falls back to pure Python.
+
+    Args:
+        model: Robot model (N bodies)
+        q: Configuration [p_base(3), quat(4), q_joints(N-1)] ∈ R^{N+6}
+        v: Velocity [v_base(6), dq_joints(N-1)] ∈ R^{N+5}
+        a: Acceleration [a_base(6), ddq_joints(N-1)] ∈ R^{N+5}
+        f_ext: External spatial forces on each body (N, 6) or None
+
+    Returns:
+        tau: Generalized forces [f_base(6), tau_joints(N-1)] ∈ R^{N+5}
+    """
+    if _USE_JIT and f_ext is None:
+        try:
+            from .rnea_jit import rnea_jit
+            md = model.model_data
+            # Pass current gravity magnitude (respects runtime changes)
+            grav_z = float(np.linalg.norm(GRAVITY_VEC))
+            return rnea_jit(
+                md.n_bodies,
+                md.n_dof,
+                md.parent,
+                md.joint_types,
+                md.joint_axes,
+                md.spatial_inertias,
+                md.joint_offsets,
+                md.joint_rotations,
+                np.ascontiguousarray(q, dtype=np.float64),
+                np.ascontiguousarray(v, dtype=np.float64),
+                np.ascontiguousarray(a, dtype=np.float64),
+                grav_z,
+            )
+        except Exception:
+            pass  # Fall through to pure-Python implementation
+
+    return _rnea_python(model, q, v, a, f_ext)
+
+
+def _rnea_python(
+    model: RobotModel,
+    q: NDArray,
+    v: NDArray,
+    a: NDArray,
+    f_ext: NDArray | None = None,
+) -> NDArray:
+    """Pure-Python Recursive Newton-Euler Algorithm (reference implementation).
 
     Args:
         model: Robot model (N bodies)

@@ -34,6 +34,39 @@ from ..dynamics.rnea import bias_forces
 from ..optimization.lcp_solver import solve_lcp_fb_newton
 from ..core.constants import MU_DEFAULT
 
+# --- Module-level pre-allocated buffers (created on first use) ---
+_step_buffers: dict = {}
+
+
+def _get_step_buffers(model: RobotModel) -> dict:
+    """Lazily create and cache per-model step buffers."""
+    mid = id(model)
+    if mid not in _step_buffers:
+        n_j = model.n_dof - 6
+        _step_buffers[mid] = {
+            "reg_jj": 1e-10 * np.eye(n_j),
+            "X_world": np.zeros((model.n_bodies, 6, 6)),
+            "cho_cache": None,
+            "M_jj_ref": np.zeros((n_j, n_j)),
+            "cho_valid": False,
+        }
+    return _step_buffers[mid]
+
+
+def _get_cached_cho(buf: dict, M_jj: NDArray, threshold: float = 1e-3):
+    """Cholesky factorization with conditional cache."""
+    if buf["cho_valid"]:
+        ref_norm = np.linalg.norm(buf["M_jj_ref"])
+        if ref_norm > 1e-12:
+            rel = np.linalg.norm(M_jj - buf["M_jj_ref"]) / ref_norm
+            if rel < threshold:
+                return buf["cho_cache"]
+    cho = cho_factor(M_jj + buf["reg_jj"])
+    buf["M_jj_ref"][:] = M_jj
+    buf["cho_cache"] = cho
+    buf["cho_valid"] = True
+    return cho
+
 
 def contact_implicit_step(
     model: RobotModel,
@@ -54,11 +87,23 @@ def contact_implicit_step(
     This completely eliminates the base-joint coupling instability.
     """
     n_dof = model.n_dof
+    buf = _get_step_buffers(model)
 
-    # Forward kinematics
-    X_world, _ = forward_kinematics(q, model)
+    # Forward kinematics (JIT path: write into pre-allocated buffer)
+    try:
+        from ..model.kinematics_jit import forward_kinematics_jit, body_position_jit
+        md = model.model_data
+        X_w = buf["X_world"]
+        forward_kinematics_jit(
+            md.n_bodies, md.parent, md.joint_types,
+            md.joint_offsets, md.joint_rotations, q, X_w,
+        )
+        _use_jit_fk = True
+    except Exception:
+        X_world_list, _ = forward_kinematics(q, model)
+        _use_jit_fk = False
 
-    # Mass matrix and bias
+    # Mass matrix and bias (already JIT-dispatched)
     M = crba(model, q)
     bias = bias_forces(model, q, v)
 
@@ -67,87 +112,63 @@ def contact_implicit_step(
     for fid in model.foot_link_ids:
         if fid < 0 or fid >= model.n_bodies:
             continue
-        p_foot = body_position(X_world[fid])
-        if p_foot[2] < 0.05:  # Near or below ground
+        if _use_jit_fk:
+            p_foot = body_position_jit(X_w[fid])
+        else:
+            p_foot = body_position(X_world_list[fid])
+        if p_foot[2] < 0.05:
             contact_feet.append(fid)
 
     n_contacts = len(contact_feet)
 
     if n_contacts >= 2:
         # === DOUBLE SUPPORT: Schur complement approach ===
-        # Base is constrained by ground contact.
-        # Solve joints-only: M_jj * dv_j = tau_j - h_j
-        # (dv_base = 0 by constraint)
-
-        # === COMPUTED TORQUE CONTROL ===
-        # The controller provides desired accelerations encoded in tau:
-        #   tau = M_jj * ddq_des + h_j
-        # So: ddq_des = M_jj^{-1} * (tau_j - h_j) = exact tracking
-        #
-        # This avoids the gravity-compensation equilibrium trap where
-        # g(q) + PD balances at a drifted configuration.
-
         M_jj = M[6:, 6:]
         h_j = bias[6:]
         tau_j = tau[6:]
-
         rhs_j = tau_j - h_j
 
         try:
-            cho_jj = cho_factor(M_jj + 1e-10 * np.eye(M_jj.shape[0]))
+            cho_jj = _get_cached_cho(buf, M_jj)
             ddq_j = cho_solve(cho_jj, rhs_j)
         except np.linalg.LinAlgError:
             ddq_j = np.zeros(n_dof - 6)
 
         ddq_j = np.clip(ddq_j, -500.0, 500.0)
 
-        # Update joint velocities (semi-implicit Euler)
         v_new = v.copy()
         v_new[6:] += h * ddq_j
-        v_new[:6] = 0.0  # Base velocity zero in double support
-
-        # Clamp joint velocities to reasonable range
+        v_new[:6] = 0.0
         v_new[6:] = np.clip(v_new[6:], -10.0, 10.0)
 
-        # Update configuration
         q_new = _integrate_config(q, v_new, h)
 
-        # Note: forward progression handled globally below
-
-        # Compute ground reaction force (from base dynamics equation)
-        # M_bb * 0 + M_bj * ddq_j + h_b = f_contact_base
-        # f_contact = M_bj * ddq_j + h_b
         f_contact_base = M[:6, 6:] @ ddq_j + bias[:6]
-        total_fz = f_contact_base[5]  # Vertical component
+        total_fz = f_contact_base[5]
+
+        if _use_jit_fk:
+            phi = np.array([body_position_jit(X_w[fid])[2] for fid in contact_feet])
+        else:
+            phi = np.array([body_position(X_world_list[fid])[2] for fid in contact_feet])
 
         contact_info = {
             "n_contacts": n_contacts,
-            "phi": np.array([body_position(X_world[fid])[2] for fid in contact_feet]),
+            "phi": phi,
             "lambda_n": np.array([total_fz / max(n_contacts, 1)]),
             "lcp_iters": 0,
             "lcp_residual": 0.0,
             "total_fz": total_fz,
         }
 
-        return q_new, v_new, contact_info.get("lambda_n", np.zeros(0)), contact_info
+        return q_new, v_new, contact_info["lambda_n"], contact_info
 
     elif n_contacts == 1:
         # === SINGLE SUPPORT: partial constraint ===
-        # One foot on ground. Constrain base rotation but allow
-        # vertical + some horizontal motion.
-        # Use reduced system with only rotation constrained.
-
-        M_red = M.copy()
-        h_red = bias.copy()
-        tau_red = tau.copy()
-
-        # Solve full system but constrain angular DOFs
-        # Free DOFs: vz(5) + joints(6:)
         free_idx = list(range(5, n_dof))
         n_free = len(free_idx)
 
         M_ff = M[np.ix_(free_idx, free_idx)]
-        rhs_f = (tau_red - h_red)[free_idx]
+        rhs_f = (tau - bias)[free_idx]
 
         try:
             cho_ff = cho_factor(M_ff + 1e-10 * np.eye(n_free))
@@ -158,17 +179,22 @@ def contact_implicit_step(
         ddq_f = np.clip(ddq_f, -200.0, 200.0)
 
         v_new = v.copy()
-        v_new[:5] = 0.0  # Constrain angular + horizontal base
+        v_new[:5] = 0.0
         for i, fi in enumerate(free_idx):
             v_new[fi] += h * ddq_f[i]
         v_new = np.clip(v_new, -10.0, 10.0)
-        v_new[:5] = 0.0  # Re-enforce constraint
+        v_new[:5] = 0.0
 
         q_new = _integrate_config(q, v_new, h)
 
+        if _use_jit_fk:
+            foot_z = body_position_jit(X_w[contact_feet[0]])[2]
+        else:
+            foot_z = body_position(X_world_list[contact_feet[0]])[2]
+
         contact_info = {
             "n_contacts": n_contacts,
-            "phi": np.array([body_position(X_world[contact_feet[0]])[2]]),
+            "phi": np.array([foot_z]),
             "lambda_n": np.zeros(1),
             "lcp_iters": 0,
             "lcp_residual": 0.0,
@@ -179,17 +205,13 @@ def contact_implicit_step(
 
     else:
         # === FLIGHT / BRIEF TRANSITION ===
-        # During walking on flat ground, brief flight phases occur
-        # at gait transitions. Use Schur complement (same as DS)
-        # to prevent unphysical base rotation during these transients.
-
         M_jj = M[6:, 6:]
         h_j = bias[6:]
         tau_j = tau[6:]
         rhs_j = tau_j - h_j
 
         try:
-            cho_jj = cho_factor(M_jj + 1e-10 * np.eye(M_jj.shape[0]))
+            cho_jj = _get_cached_cho(buf, M_jj)
             ddq_j = cho_solve(cho_jj, rhs_j)
         except np.linalg.LinAlgError:
             ddq_j = np.zeros(n_dof - 6)
@@ -198,7 +220,7 @@ def contact_implicit_step(
 
         v_free = v.copy()
         v_free[6:] += h * ddq_j
-        v_free[:6] = 0.0  # Constrain base (flat ground walking)
+        v_free[:6] = 0.0
         v_free[6:] = np.clip(v_free[6:], -10.0, 10.0)
 
         q_new = _integrate_config(q, v_free, h)

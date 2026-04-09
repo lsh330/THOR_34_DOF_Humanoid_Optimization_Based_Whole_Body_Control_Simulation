@@ -263,6 +263,7 @@ class RobotModel:
         "parent", "joint_types", "joint_axes",
         "_joint_name_to_idx", "total_mass",
         "foot_link_ids", "spatial_inertias", "motion_subspaces",
+        "_model_data",
     )
 
     def __init__(self) -> None:
@@ -299,6 +300,22 @@ class RobotModel:
         # Note: motion_subspace_revolute() is fast enough inline
         # (benchmarked: caching was 2.3% slower due to list lookup overhead)
         self.motion_subspaces = None  # Unused, kept for slot compatibility
+
+        # Lazy-cached Numba-compatible flat model data (populated on first access)
+        self._model_data = None
+
+    @property
+    def model_data(self):
+        """Lazily create and cache Numba-compatible model data.
+
+        On first access, flattens all link properties into contiguous
+        NumPy arrays (ModelData).  Subsequent accesses return the cached
+        object at O(1) cost.
+        """
+        if self._model_data is None:
+            from .model_data import flatten_model
+            self._model_data = flatten_model(self)
+        return self._model_data
 
     def joint_index(self, name: str) -> int:
         """Get joint/body index by name."""

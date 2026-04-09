@@ -1,0 +1,48 @@
+# THOR 34-DOF Whole-Body Control Simulation Configuration
+# Default configuration used as fallback when config.yaml keys are absent.
+
+# Simulation
+simulation:
+  scenario: walking        # standing, walking
+  t_final: 5.1             # Duration [s]
+  dt: 0.002                # Integration timestep [s]
+  walking_speed: 0.1875    # Forward progression [m/s]
+
+# Walking gait parameters (Winter 1991)
+gait:
+  n_steps: 6               # Number of walking steps
+  ds_duration: 0.25         # Double support transition [s]
+  swing_duration: 0.55      # Single leg swing [s]
+
+# Control gains
+control:
+  kp_leg: 600.0             # Joint PD proportional [rad/s^2]
+  kd_leg: 60.0              # Joint PD derivative [rad/s]
+  kp_arm: 300.0
+  kd_arm: 30.0
+
+# CI-MPC parameters
+ci_mpc:
+  Q_q: 500.0                # Configuration tracking weight
+  Q_v: 50.0                 # Velocity tracking weight
+  R: 0.01                   # Control effort weight
+
+# Contact model
+contact:
+  mu: 0.7                   # Friction coefficient
+  stiffness: 30000.0        # Spring-Damper [N/m]
+  damping: 2000.0           # Spring-Damper [N*s/m]
+
+# Visualization
+visualization:
+  save_plots: true
+  save_gif: false
+  fps: 20
+  dpi: 300                  # Publication quality
+  output_dir: output
+
+# Performance tuning
+performance:
+  use_jit: true
+  cholesky_cache_threshold: 1.0e-3
+  warmup_on_init: true

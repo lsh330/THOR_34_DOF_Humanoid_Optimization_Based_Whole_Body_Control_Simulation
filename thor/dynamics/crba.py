@@ -14,6 +14,11 @@ M is symmetric and positive-definite.
 Reference:
     Featherstone, R. (2008). Ch. 6: Forward Dynamics.
     Algorithm 6.2 (Composite Rigid Body Algorithm).
+
+JIT dispatch:
+    When _USE_JIT=True (default), crba() attempts to call the Numba-compiled
+    crba_jit() from crba_jit.py.  On any failure (import error, JIT error,
+    shape mismatch) it silently falls back to _crba_python().
 """
 
 import numpy as np
@@ -26,9 +31,45 @@ from ..model.robot_model import RobotModel
 from ..model.joint_types import JointType
 from ..model.kinematics import joint_transform, quat_to_rot
 
+# Set to False to disable JIT dispatch (useful for debugging)
+_USE_JIT: bool = True
+
 
 def crba(model: RobotModel, q: NDArray) -> NDArray:
     """Composite Rigid Body Algorithm.
+
+    Dispatches to the Numba JIT version when _USE_JIT is True, and falls
+    back to the pure-Python implementation (_crba_python) on any failure.
+
+    Args:
+        model: Robot model
+        q: Configuration vector [p(3), quat(4), q_joints(N-1)]
+
+    Returns:
+        M: (n_dof, n_dof) symmetric positive-definite mass matrix
+    """
+    if _USE_JIT:
+        try:
+            from .crba_jit import crba_jit  # noqa: PLC0415
+            md = model.model_data
+            return crba_jit(
+                md.n_bodies,
+                md.n_dof,
+                md.parent,
+                md.joint_types,
+                md.joint_axes,
+                md.spatial_inertias,
+                md.joint_offsets,
+                md.joint_rotations,
+                np.asarray(q, dtype=np.float64),
+            )
+        except Exception:
+            pass
+    return _crba_python(model, q)
+
+
+def _crba_python(model: RobotModel, q: NDArray) -> NDArray:
+    """Pure-Python fallback CRBA implementation (original algorithm).
 
     Args:
         model: Robot model
