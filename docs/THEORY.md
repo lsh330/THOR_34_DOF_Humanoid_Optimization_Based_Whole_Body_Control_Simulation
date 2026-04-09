@@ -691,7 +691,25 @@ X_i(q_i) = X_{tree,i} \cdot X_{rot}(q_i)
 ```
 
 여기서:
-- $X_{tree,i}$: 부모 링크 좌표계에서 관절 원점까지의 고정 변환 (관절 오프셋 $p_{offset}$ 과 고정 회전 $R_{fixed}$ 로 구성)
+-
+
+```math
+X_{tree,i}
+```
+
+: 부모 링크 좌표계에서 관절 원점까지의 고정 변환 (관절 오프셋
+
+```math
+p_{offset}
+```
+
+ 과 고정 회전
+
+```math
+R_{fixed}
+```
+
+ 로 구성)
 -
 
 ```math
@@ -839,7 +857,19 @@ M_{total} = \sum_{i} m_{i}
 
  : 전체 질량
 - $p_{i}$ : 몸체 $i$ 의 원점 위치 (세계 좌표계)
-- $R_{i}$ : 몸체 $i$ 의 회전 행렬 ($X_{world,i}[:3,:3]$)
+-
+
+```math
+R_{i}
+```
+
+ : 몸체 $i$ 의 회전 행렬 (
+
+```math
+X_{world,i}[:3,:3]
+```
+
+)
 - $c_{body,i}$ : 몸체 $i$ 의 CoM (링크 좌표계에서)
 
 ```python
@@ -942,16 +972,10 @@ THOR 35개 몸체에 대한 순기구학 연산량:
 
 | 연산 | 횟수 | 비고 |
 |:---|:---:|:---|
-| 관절 변환
-
-```math
-X_{i}(q_{i})
-```
-
- | 34 | 각 관절마다 1회 |
+| 관절 변환 $X_i(q_i)$ | 34 | 각 관절마다 1회 |
 | 공간 변환 합성 $X_{world}$ | 34 | 부모→자식 전파 |
-| 위치 추출 $p_{i}$ | N/A | 필요 시만 계산 |
-| 자코비안 $J_{i}$ | $O(d_{i})$ | $d_{i}$ = 체인 깊이 |
+| 위치 추출 $p_i$ | N/A | 필요 시만 계산 |
+| 자코비안 $J_i$ | $O(d_i)$ | $d_i$ = 체인 깊이 |
 
 전체 FK 연산량: $O(N)$ — 각 몸체를 한 번씩만 처리한다.
 
@@ -1003,7 +1027,19 @@ M = \begin{bmatrix} M_{bb} & M_{bj} \\ M_{jb} & M_{jj} \end{bmatrix}
 ```
 
 여기서:
-- $M_{bb} \in \mathbb{R}^{6 \times 6}$: 부동 기저 관성 (합성 관성 $\mathcal{I}_{c}^{(0)}$와 동일)
+-
+
+```math
+M_{bb} \in \mathbb{R}^{6 \times 6}
+```
+
+: 부동 기저 관성 (합성 관성
+
+```math
+\mathcal{I}_{c}^{(0)}
+```
+
+와 동일)
 -
 
 ```math
@@ -1100,7 +1136,19 @@ acc[0] = a_base + a_grav    # 기저 가속도에 중력 추가
 v^T M v = \sum_{i=0}^{N-1} \mathbf{v}_i^T \mathcal{I}_i \mathbf{v}_i = 2T > 0
 ```
 
-각 $\mathcal{I}_{i} \succ 0$ (2.6절 증명)이고 $v \neq 0$ 이면 적어도 하나의 $\mathbf{v}_{i} \neq 0$ 이므로, 전체 합이 양수다. $\quad \blacksquare$
+각
+
+```math
+\mathcal{I}_{i} \succ 0
+```
+
+ (2.6절 증명)이고 $v \neq 0$ 이면 적어도 하나의
+
+```math
+\mathbf{v}_{i} \neq 0
+```
+
+ 이므로, 전체 합이 양수다. $\quad \blacksquare$
 
 ### 4.7 운동 방정식의 유도 — Lagrangian 접근법
 
@@ -1268,7 +1316,19 @@ RNEA는 주어진 $(q, v, \dot{v})$ 에서 이를 달성하는 일반화 힘 $\t
 \mathbf{v}_{i} = X_{up,i} \mathbf{v}_{parent} + S_{i} \dot{q}_{i}
 ```
 
- 이다. $X_{up,i}$ 는 관절 각도 $q_{i}(t)$ 에 의존하므로:
+ 이다.
+
+```math
+X_{up,i}
+```
+
+ 는 관절 각도
+
+```math
+q_{i}(t)
+```
+
+ 에 의존하므로:
 
 ```math
 \dot{X}_{up,i} = \frac{d}{dt}\begin{bmatrix} R_i & 0 \\ -R_i[p_i]_{\times} & R_i \end{bmatrix}
@@ -1715,7 +1775,19 @@ h_G = \begin{bmatrix} k_G \\ l_G \end{bmatrix} = A_G(q) \cdot v
 
 여기서:
 - $k_{G} \in \mathbb{R}^3$: CoM에서의 각운동량 (Angular Momentum)
-- $l_{G} \in \mathbb{R}^3$: 선 운동량 (Linear Momentum, $= M_{total} \dot{c}$)
+-
+
+```math
+l_{G} \in \mathbb{R}^3
+```
+
+: 선 운동량 (Linear Momentum,
+
+```math
+= M_{total} \dot{c}
+```
+
+)
 -
 
 ```math
@@ -1989,8 +2061,32 @@ v_{corner} = v_{foot} + \omega_{foot} \times r
 
 
 의미:
-- $\phi_{n} > 0$ (비접촉): $\lambda_{n} = 0$ (힘 없음)
-- $\phi_{n} = 0$ (접촉 중): $\lambda_{n} \geq 0$ (압축력만 가능)
+-
+
+```math
+\phi_{n} > 0
+```
+
+ (비접촉):
+
+```math
+\lambda_{n} = 0
+```
+
+ (힘 없음)
+-
+
+```math
+\phi_{n} = 0
+```
+
+ (접촉 중):
+
+```math
+\lambda_{n} \geq 0
+```
+
+ (압축력만 가능)
 
 #### 7.2.2 LCP 표준 형태
 
@@ -2024,7 +2120,19 @@ J_{n} \in \mathbb{R}^{n_{c} \times n_{dof}}
 q_{LCP} = J_n M^{-1} (h - S^T \tau) \cdot h_{step} + \frac{\phi_n}{h_{step}}
 ```
 
-Delassus 행렬의 성질: $M \succ 0$ 이고 $J_{n}$ 이 만약 행 독립이면 $M_{LCP} \succ 0$ (P-행렬). LCP는 고유 해를 가진다.
+Delassus 행렬의 성질: $M \succ 0$ 이고
+
+```math
+J_{n}
+```
+
+ 이 만약 행 독립이면
+
+```math
+M_{LCP} \succ 0
+```
+
+ (P-행렬). LCP는 고유 해를 가진다.
 
 #### 7.2.3 Delassus 행렬의 유도 (완전)
 
@@ -2172,7 +2280,19 @@ Newton 스텝 방정식 (Schur complement 형태):
 (W + Z M) \Delta\lambda = -r_c + Z r_w
 ```
 
-여기서 $W = \text{diag}(w)$, $Z = \text{diag}(\lambda)$, $r_{w} = w - M\lambda - q$, $r_{c} = \lambda \odot w - \kappa$.
+여기서 $W = \text{diag}(w)$, $Z = \text{diag}(\lambda)$,
+
+```math
+r_{w} = w - M\lambda - q
+```
+
+,
+
+```math
+r_{c} = \lambda \odot w - \kappa
+```
+
+.
 
 ```python
 # thor/optimization/lcp_solver.py (solve_lcp_interior_point)
@@ -2223,7 +2343,19 @@ M_{jb} \cdot 0 + M_{jj} \dot{v}_j + h_j = \tau_j
 M_{jj} \dot{v}_j = \tau_j - h_j
 ```
 
-이것이 **축소 34×34 시스템**이다. $M_{bb}$ 에 관한 항들이 $\dot{v}_{b} = 0$ 으로 소거된다.
+이것이 **축소 34×34 시스템**이다.
+
+```math
+M_{bb}
+```
+
+ 에 관한 항들이
+
+```math
+\dot{v}_{b} = 0
+```
+
+ 으로 소거된다.
 
 **기저 반력 복원**: 첫 번째 행 방정식에서:
 
@@ -2393,7 +2525,19 @@ s^2 + K_d s + K_p = 0
 K_p = \omega_n^2, \quad K_d = 2\zeta\omega_n
 ```
 
-THOR 구현에서 다리 관절: $K_{p} = 600$, $K_{d} = 60$:
+THOR 구현에서 다리 관절:
+
+```math
+K_{p} = 600
+```
+
+,
+
+```math
+K_{d} = 60
+```
+
+:
 
 **(8.10)**
 
@@ -2434,9 +2578,33 @@ T_{cycle} = T_{DS} + T_{swing} = 0.80
 \theta_{hip}(s) = \theta_{ext} + (\theta_{flex} - \theta_{ext}) \cdot \frac{1 - \cos(\pi s)}{2}
 ```
 
-여기서 $\theta_{ext} = -5°$ (신전), $\theta_{flex} = 20°$ (굴곡).
+여기서
 
-물리적 의미: $s=0$ 에서 $\theta_{ext}$, $s=1$ 에서 $\theta_{flex}$ 로 부드럽게 전환. 코사인 보간은 시작/끝에서 속도가 0이 되어 충격을 최소화한다.
+```math
+\theta_{ext} = -5°
+```
+
+ (신전),
+
+```math
+\theta_{flex} = 20°
+```
+
+ (굴곡).
+
+물리적 의미: $s=0$ 에서
+
+```math
+\theta_{ext}
+```
+
+, $s=1$ 에서
+
+```math
+\theta_{flex}
+```
+
+ 로 부드럽게 전환. 코사인 보간은 시작/끝에서 속도가 0이 되어 충격을 최소화한다.
 
 **무릎 피치 (Knee Pitch)**: 비대칭 벨 형태 ($\sin^{0.8}$):
 
@@ -2446,7 +2614,19 @@ T_{cycle} = T_{DS} + T_{swing} = 0.80
 \theta_{knee}(s) = \theta_{stance} + (\theta_{swing} - \theta_{stance}) \cdot \sin(\pi s)^{0.8}
 ```
 
-여기서 $\theta_{stance} = 5°$, $\theta_{swing} = 45°$.
+여기서
+
+```math
+\theta_{stance} = 5°
+```
+
+,
+
+```math
+\theta_{swing} = 45°
+```
+
+.
 
 $\sin^{0.8}$ (지수 0.8)의 의미: 표준 $\sin$ ($p=1$) 보다 피크가 더 날카롭고 초기 굴곡이 빠르다. 이는 발목 추진(Push-off) 직후 빠른 무릎 굴곡을 모델링한다.
 
@@ -2517,7 +2697,19 @@ $s \in [0, 1]$ ($s=0$: 발 착지, $s=1$: 발 떼기)
 \beta(s_{DS}) = \frac{1 - \cos(\pi s_{DS})}{2}, \quad s_{DS} \in [0, 1]
 ```
 
-여기서 $\theta_{end}$ 는 이전 위상 끝, $\theta_{start}'$ 는 다음 위상 시작 각도다.
+여기서
+
+```math
+\theta_{end}
+```
+
+ 는 이전 위상 끝,
+
+```math
+\theta_{start}'
+```
+
+ 는 다음 위상 시작 각도다.
 
 ```python
 # thor/control/walking_controller.py
@@ -2603,7 +2795,25 @@ f_{c} = [f_{t}^T, f_{n}]^T
 \Delta q_{static} = K_{p}^{-1} g_{j}(q)
 ```
 
-. THOR 다리에서 $\|g_{j}\| \approx 200$ N·m, $K_{p} = 600$ N·m/rad 이면 $\Delta q_{static} \approx 0.33$ rad $\approx 19°$. 이는 허용 불가능한 오차다.
+. THOR 다리에서
+
+```math
+\|g_{j}\| \approx 200
+```
+
+ N·m,
+
+```math
+K_{p} = 600
+```
+
+ N·m/rad 이면
+
+```math
+\Delta q_{static} \approx 0.33
+```
+
+ rad $\approx 19°$. 이는 허용 불가능한 오차다.
 
 계산 토크 제어에서는 $h_{j}$ 에 중력이 포함되어 자동으로 보상된다.
 
@@ -2842,55 +3052,31 @@ q_new[7:]  += h * v[6:]         # 관절 += h * 관절속도
 
 | 기호 | 차원 | 의미 |
 |:---:|:---:|:---|
-| $q$ | $\mathbb{R}^{41}$ | 일반화 좌표
-
-```math
-[p_{base}(3),\, \mathbf{q}_{quat}(4),\, q_{joints}(34)]
-```
-
- |
-| $v$ | $\mathbb{R}^{40}$ | 일반화 속도
-
-```math
-[\omega_{base}(3),\, v_{lin,base}(3),\, \dot{q}_{joints}(34)]
-```
-
- |
+| $q$ | $\mathbb{R}^{41}$ | 일반화 좌표 [위치(3) + 쿼터니언(4) + 관절(34)] |
+| $v$ | $\mathbb{R}^{40}$ | 일반화 속도 [각속도(3) + 선속도(3) + 관절속도(34)] |
 | $\dot{v}$ | $\mathbb{R}^{40}$ | 일반화 가속도 |
 | $M(q)$ | $\mathbb{R}^{40 \times 40}$ | 질량 행렬 (대칭 양정치) |
 | $h(q,v)$ | $\mathbb{R}^{40}$ | 바이어스 힘 (코리올리+원심+중력) |
 | $\tau$ | $\mathbb{R}^{34}$ | 관절 토크 벡터 |
 | $S^T$ | $\mathbb{R}^{40 \times 34}$ | 선택 행렬 |
-| $J_{c}$ | $\mathbb{R}^{3n_{c} \times 40}$ | 접촉 자코비안 |
-| $f_{c}$ | $\mathbb{R}^{3n_{c}}$ | 접촉력 벡터 |
-| $\mathbf{v}$ | $\mathbb{R}^6$ | 공간 속도 (Twist) $[\omega;\, v_{lin}]$ |
-| $\mathbf{f}$ | $\mathbb{R}^6$ | 공간 힘 (Wrench) $[\tau;\, f]$ |
+| $J_c$ | $\mathbb{R}^{3n_c \times 40}$ | 접촉 자코비안 |
+| $f_c$ | $\mathbb{R}^{3n_c}$ | 접촉력 벡터 |
+| $\mathbf{v}$ | $\mathbb{R}^6$ | 공간 속도 (Twist) |
+| $\mathbf{f}$ | $\mathbb{R}^6$ | 공간 힘 (Wrench) |
 | $X$ | $\mathbb{R}^{6 \times 6}$ | 공간 변환 행렬 (Plücker) |
 | $\mathcal{I}$ | $\mathbb{R}^{6 \times 6}$ | 공간 관성 행렬 |
-| $S_{i}$ | $\mathbb{R}^6$ | 관절 $i$ 의 운동 부분공간 |
+| $S_i$ | $\mathbb{R}^6$ | 관절 $i$ 의 운동 부분공간 |
 | $X_{up,i}$ | $\mathbb{R}^{6 \times 6}$ | 몸체 $i$ 에서 부모로의 공간 변환 |
-| $\mathcal{I}_{c}^{(i)}$ | $\mathbb{R}^{6 \times 6}$ | 몸체 $i$ 의 합성 관성 (CRBA) |
-| $IA_{i}$ | $\mathbb{R}^{6 \times 6}$ | 몸체 $i$ 의 관절체 관성 (ABA) |
-| $pA_{i}$ | $\mathbb{R}^6$ | 몸체 $i$ 의 관절체 바이어스 힘 (ABA) |
-| $A_{G}$ | $\mathbb{R}^{6 \times 40}$ | 중심 운동량 행렬 (CMM) |
-| $h_{G}$ | $\mathbb{R}^6$ | 중심 운동량
-
-```math
-[k_{G};\, l_{G}]
-```
-
- |
+| $\mathcal{I}_c^{(i)}$ | $\mathbb{R}^{6 \times 6}$ | 몸체 $i$ 의 합성 관성 (CRBA) |
+| $IA_i$ | $\mathbb{R}^{6 \times 6}$ | 몸체 $i$ 의 관절체 관성 (ABA) |
+| $pA_i$ | $\mathbb{R}^6$ | 몸체 $i$ 의 관절체 바이어스 힘 (ABA) |
+| $A_G$ | $\mathbb{R}^{6 \times 40}$ | 중심 운동량 행렬 (CMM) |
+| $h_G$ | $\mathbb{R}^6$ | 중심 운동량 (각운동량 + 선운동량) |
 | $c$ | $\mathbb{R}^3$ | 전체 시스템 질량 중심 위치 |
 | $R$ | $\mathbb{R}^{3 \times 3}$ | 회전 행렬 ($\in SO(3)$) |
-|
-
-```math
-[p]_{\times}
-```
-
- | $\mathbb{R}^{3 \times 3}$ | 벡터 $p$ 의 반대칭 행렬 (Skew-Symmetric) |
+| $[p]_\times$ | $\mathbb{R}^{3 \times 3}$ | 벡터 $p$ 의 반대칭 행렬 (Skew-Symmetric) |
 | $\phi_{FB}$ | $\mathbb{R}$ | Fischer-Burmeister NCP 함수 |
-| $\lambda$ | $\mathbb{R}^{n_{c}}$ | LCP 해 (접촉 법선력) |
+| $\lambda$ | $\mathbb{R}^{n_c}$ | LCP 해 (접촉 법선력) |
 | $h_{step}$ | $\mathbb{R}$ | 시간 스텝 크기 |
 | $N$ | 정수 | 몸체 수 ($=35$, THOR) |
 | $n_{dof}$ | 정수 | DOF 수 ($=40$, THOR) |
@@ -3088,7 +3274,25 @@ $R(t) \in SO(3)$ 의 시간 미분:
 
 ### D.1 프레임 A에서 프레임 B로의 변환
 
-프레임 B가 프레임 A에 대해 회전 $R_{AB}$ 와 이동 $p_{AB}$ 로 정의될 때, 프레임 A의 공간 속도 $\mathbf{v}_{A}$ 를 프레임 B에서 표현하면:
+프레임 B가 프레임 A에 대해 회전
+
+```math
+R_{AB}
+```
+
+ 와 이동
+
+```math
+p_{AB}
+```
+
+ 로 정의될 때, 프레임 A의 공간 속도
+
+```math
+\mathbf{v}_{A}
+```
+
+ 를 프레임 B에서 표현하면:
 
 **(D.1)**
 
@@ -3289,7 +3493,19 @@ M_{LCP} = J_{n} M^{-1} J_{n}^T
 ```
 
  의 경우:
-- $M \succ 0$ 이고 $J_{n}$ 이 행 독립 → $M_{LCP} \succ 0$ → P-행렬 조건 만족
+- $M \succ 0$ 이고
+
+```math
+J_{n}
+```
+
+ 이 행 독립 →
+
+```math
+M_{LCP} \succ 0
+```
+
+ → P-행렬 조건 만족
 - 단, 접촉점이 기하학적으로 종속이면 $J_{n}$ 이 행 종속 → 정규화 필요
 
 ### F.3 보행 제어의 안정성
@@ -3310,7 +3526,19 @@ s^2 + K_{d} s + K_{p} = 0
 s_{1,2} = \frac{-K_d \pm \sqrt{K_d^2 - 4K_p}}{2}
 ```
 
-THOR 다리 관절 ($K_{p}=600$, $K_{d}=60$):
+THOR 다리 관절 (
+
+```math
+K_{p}=600
+```
+
+,
+
+```math
+K_{d}=60
+```
+
+):
 
 **(F.2)**
 
@@ -3326,7 +3554,19 @@ K_d^2 - 4K_p = 3600 - 2400 = 1200 > 0
 s_{1,2} = \frac{-60 \pm \sqrt{1200}}{2} \approx \frac{-60 \pm 34.6}{2} = \{-12.7,\; -47.3\}
 ```
 
-시정수: $\tau_{1} = 1/12.7 \approx 79$ ms, $\tau_{2} = 1/47.3 \approx 21$ ms.
+시정수:
+
+```math
+\tau_{1} = 1/12.7 \approx 79
+```
+
+ ms,
+
+```math
+\tau_{2} = 1/47.3 \approx 21
+```
+
+ ms.
 
 ---
 
