@@ -207,6 +207,7 @@ l_{THOR} = l_{THORMANG3} \times \frac{1.78}{1.375} \approx l_{THORMANG3} \times 
 ```
 
 관성 텐서는 길이 스케일의 제곱으로 비례:
+
 ```math
 I_{THOR} = I_{THORMANG3} \times \frac{65}{42} \times \left(\frac{1.78}{1.375}\right)^2 \approx I_{THORMANG3} \times 2.597 \tag{1.13}
 ```
@@ -268,11 +269,13 @@ P = \mathbf{f}'^T \mathbf{v}' = (X^{-T} \mathbf{f})^T (X \mathbf{v}) = \mathbf{f
 링크 $i$ 에서 링크 $j$ 로의 공간 변환 $X \in \mathbb{R}^{6 \times 6}$ 를 유도한다. 회전 행렬 $R \in SO(3)$ 와 이동 벡터 $p \in \mathbb{R}^3$ 가 주어졌을 때:
 
 **단계 1**: 순수 이동 $p$ 에 의한 각속도 변환은 변하지 않는다.
+
 ```math
 \omega' = \omega \tag{2.4a}
 ```
 
 **단계 2**: 이동 후 선속도는 회전 이동 효과가 더해진다.
+
 ```math
 v'_{lin} = v_{lin} - p \times \omega = v_{lin} + \omega \times p \tag{2.4b}
 ```
@@ -284,11 +287,13 @@ v'_{lin} = v_{lin} - p \times \omega = v_{lin} + \omega \times p \tag{2.4b}
 ```
 
 **단계 3**: 이동 변환을 행렬로 쓰면:
+
 ```math
 \begin{bmatrix} \omega' \\ v'_{lin} \end{bmatrix} = \begin{bmatrix} I & 0 \\ -[p]_\times & I \end{bmatrix} \begin{bmatrix} \omega \\ v_{lin} \end{bmatrix} \tag{2.6}
 ```
 
 **단계 4**: 좌표계 회전 $R$ 을 적용하면:
+
 ```math
 \begin{bmatrix} \omega'' \\ v''_{lin} \end{bmatrix} = \begin{bmatrix} R & 0 \\ 0 & R \end{bmatrix} \begin{bmatrix} \omega' \\ v'_{lin} \end{bmatrix} \tag{2.7}
 ```
@@ -513,11 +518,13 @@ def joint_transform(link_idx, q_joint, model):
 세계 좌표계(World Frame)에서 각 몸체의 변환을 재귀적으로 계산한다.
 
 **부동 기저 (Body 0)**:
+
 ```math
 X_{world,0} = X_{base}(R_{base}(q_{quat}), p_{base}) \tag{3.3}
 ```
 
 **일반 몸체 $i \geq 1$** (부모 → 자식 방향):
+
 ```math
 X_{world,i} = X_i(q_i) \cdot X_{world,parent(i)} \tag{3.4}
 ```
@@ -537,16 +544,19 @@ for i in range(1, n):
 공간 변환 행렬의 구조로부터 위치 $p$ 를 복원한다.
 
 식 (2.8)로부터:
+
 ```math
 X[3:, :3] = -R[p]_\times \tag{3.5}
 ```
 
 양변에 $R^T$를 왼쪽에 곱하면:
+
 ```math
 R^T X[3:, :3] = -[p]_\times \tag{3.6}
 ```
 
 $[p]_\times$ 의 비대각 원소로부터:
+
 ```math
 p = \begin{bmatrix} -(-p_\times)_{2,1} \\ -(-p_\times)_{0,2} \\ -(-p_\times)_{1,0} \end{bmatrix} = \begin{bmatrix} (p_\times)_{2,1} \\ (p_\times)_{0,2} \\ (p_\times)_{1,0} \end{bmatrix} \tag{3.7}
 ```
@@ -730,6 +740,7 @@ S^T = \begin{bmatrix} 0_{6 \times 34} \\ I_{34 \times 34} \end{bmatrix} \tag{4.6
 **물리적 정당성**: 모든 몸체에 중력이 작용하는 것은, 기저에 위쪽 방향 가상 가속도 $a_{grav}$ 를 더하는 것과 등가다.
 
 **유도**: $N$ 개 몸체에 대한 뉴턴의 운동 법칙:
+
 ```math
 m_i \ddot{p}_i = f_{ext,i} + m_i g \hat{z} \tag{4.7}
 ```
@@ -770,6 +781,7 @@ v^T M v = \sum_{i=0}^{N-1} \mathbf{v}_i^T \mathcal{I}_i \mathbf{v}_i = 2T > 0 \t
 라그랑지 역학(Lagrangian Mechanics)으로부터 식 (4.1)을 유도한다.
 
 **라그랑지안 (Lagrangian)**:
+
 ```math
 L(q, v) = T(q, v) - V(q) \tag{4.10}
 ```
@@ -777,6 +789,7 @@ L(q, v) = T(q, v) - V(q) \tag{4.10}
 여기서 $T = \frac{1}{2} v^T M(q) v$ (운동 에너지), $V(q)$ (포텐셜 에너지, 중력).
 
 **오일러-라그랑지 방정식**:
+
 ```math
 \frac{d}{dt}\frac{\partial L}{\partial v} - \frac{\partial L}{\partial q} = Q \tag{4.11}
 ```
@@ -834,9 +847,11 @@ RNEA는 주어진 $(q, v, \dot{v})$ 에서 이를 달성하는 일반화 힘 $\t
 트리의 루트(기저)에서 잎(말단)으로 전파한다.
 
 **Body 0 (부동 기저)**:
+
 ```math
 \mathbf{v}_0 = v_{base} \tag{5.2a}
 ```
+
 ```math
 \mathbf{a}_0 = a_{base} + a_{grav} \tag{5.2b}
 ```
@@ -844,11 +859,13 @@ RNEA는 주어진 $(q, v, \dot{v})$ 에서 이를 달성하는 일반화 힘 $\t
 **Body $i \geq 1$ (자식 몸체)**:
 
 속도 전파:
+
 ```math
 \mathbf{v}_i = X_{up,i} \mathbf{v}_{parent(i)} + S_i \dot{q}_i \tag{5.3}
 ```
 
 가속도 전파:
+
 ```math
 \mathbf{a}_i = X_{up,i} \mathbf{a}_{parent(i)} + S_i \ddot{q}_i + \underbrace{[\mathbf{v}_i]_\times S_i \dot{q}_i}_{\text{속도곱 가속도}} \tag{5.4}
 ```
@@ -858,11 +875,13 @@ RNEA는 주어진 $(q, v, \dot{v})$ 에서 이를 달성하는 일반화 힘 $\t
 이 항은 관절 좌표계가 회전하기 때문에 발생한다. 코리올리 가속도와 원심 가속도의 합으로, 관절의 회전 속도와 링크의 이동 속도가 결합되어 생성된다.
 
 유도: 관절 $i$ 의 공간 속도 $\mathbf{v}_i$ 는 부모의 속도 전파와 관절 기여의 합이다. 시간 미분하면:
+
 ```math
 \dot{\mathbf{v}}_i = \dot{X}_{up,i} \mathbf{v}_{parent} + X_{up,i} \dot{\mathbf{v}}_{parent} + \dot{S}_i \dot{q}_i + S_i \ddot{q}_i \tag{5.5}
 ```
 
 $\dot{X}_{up,i} \mathbf{v}_{parent} = [\mathbf{v}_i]_\times X_{up,i} \mathbf{v}_{parent}$ 이고 $\dot{S}_i = 0$ (운동 부분공간은 관절 좌표계에서 상수)이므로:
+
 ```math
 \mathbf{a}_i = X_{up,i} \mathbf{a}_{parent} + S_i \ddot{q}_i + [\mathbf{v}_i]_\times (S_i \dot{q}_i) \tag{5.6}
 ```
@@ -899,6 +918,7 @@ acc[i] = X_up[i] @ acc[parent] + S_i * ddq_i + vxS   # 식 (5.4)
 잎에서 루트 방향으로 뉴턴-오일러 방정식을 적용한다.
 
 **몸체 $i$ 의 힘**:
+
 ```math
 \mathbf{f}_i = \mathcal{I}_i \mathbf{a}_i + [\mathbf{v}_i]_{\times^*} (\mathcal{I}_i \mathbf{v}_i) \tag{5.7}
 ```
@@ -908,11 +928,13 @@ acc[i] = X_up[i] @ acc[parent] + S_i * ddq_i + vxS   # 식 (5.4)
 - $[\mathbf{v}_i]_{\times^*} (\mathcal{I}_i \mathbf{v}_i) = \mathbf{v}_i \times^* (\mathcal{I}_i \mathbf{v}_i)$: 자이로스코픽 힘 (Gyroscopic Force) — 회전 운동에 의한 원심 및 코리올리 효과
 
 **부모로 힘 전파**:
+
 ```math
 \mathbf{f}_{parent(i)} \mathrel{+}= X_{up,i}^T \mathbf{f}_i \tag{5.8}
 ```
 
 관절 토크 추출:
+
 ```math
 \tau_i = S_i^T \mathbf{f}_i \tag{5.9}
 ```
@@ -980,6 +1002,7 @@ for i in range(n-1, 0, -1):
 #### 5.2.2 Pass 2: 질량 행렬 채우기 (Mass Matrix Fill)
 
 **부동 기저 블록** ($6 \times 6$):
+
 ```math
 M[0:6, 0:6] = \mathcal{I}_c^{(0)} \tag{5.12}
 ```
@@ -987,6 +1010,7 @@ M[0:6, 0:6] = \mathcal{I}_c^{(0)} \tag{5.12}
 이는 루트(기저)의 합성 관성이 전체 시스템의 관성을 반영하기 때문이다.
 
 **대각 원소** (관절 $i$ 의 자기 관성):
+
 ```math
 M[dof_i, dof_i] = S_i^T \mathcal{I}_c^{(i)} S_i \tag{5.13}
 ```
@@ -994,9 +1018,11 @@ M[dof_i, dof_i] = S_i^T \mathcal{I}_c^{(i)} S_i \tag{5.13}
 **비대각 원소** (관절 $i$ 와 조상 관절 $j$ 의 결합 관성):
 
 $F_i = \mathcal{I}_c^{(i)} S_i$ 를 부모 방향으로 전파하면서:
+
 ```math
 F_{up} \leftarrow X_{up,j}^T F_{up} \tag{5.14a}
 ```
+
 ```math
 M[dof_i, dof_j] = M[dof_j, dof_i] = S_j^T F_{up} \tag{5.14b}
 ```
@@ -1037,6 +1063,7 @@ c_i = [\mathbf{v}_i]_\times S_i \dot{q}_i \tag{5.17}
 초기 관절체 관성(Articulated Body Inertia): $IA_i = \mathcal{I}_i$
 
 초기 관절체 바이어스 힘(Articulated Bias Force):
+
 ```math
 pA_i = [\mathbf{v}_i]_{\times^*} (\mathcal{I}_i \mathbf{v}_i) \tag{5.18}
 ```
@@ -1053,14 +1080,17 @@ pA[i] = spatial_cross_force(vel[i]) @ (IA[i] @ vel[i])     # 식 (5.18)
 잎에서 루트 방향으로 관절체 관성과 바이어스를 누적한다.
 
 각 관절 $i$ 에서:
+
 ```math
 U_i = IA_i S_i \tag{5.19a}
 ```
+
 ```math
 D_i = S_i^T U_i \tag{5.19b}
 ```
 
 **관절 잔여 토크 (Residual Torque)**:
+
 ```math
 u_i = \tau_i - S_i^T pA_i \tag{5.19c}
 ```
@@ -1101,17 +1131,21 @@ pA[parent] += X_up[i].T @ pa             # 식 (5.20d)
 루트에서 잎 방향으로 가속도를 계산한다.
 
 **기저 가속도**:
+
 ```math
 \mathbf{a}_0 = IA_0^{-1} (\tau_{0:6} - pA_0) + a_{grav} \tag{5.21}
 ```
 
 **관절 가속도**:
+
 ```math
 a_{parent} = X_{up,i} \mathbf{a}_{parent(i)} + c_i \tag{5.22a}
 ```
+
 ```math
 \ddot{q}_i = \frac{u_i - U_i^T a_{parent}}{D_i} \tag{5.22b}
 ```
+
 ```math
 \mathbf{a}_i = a_{parent} + S_i \ddot{q}_i \tag{5.22c}
 ```
@@ -1207,11 +1241,13 @@ A_G = \sum_{i=0}^{N-1} X_{G,i}^{-T} \mathcal{I}_i J_i \tag{6.2}
 구체적 계산: 몸체 $i$ 의 CoM 위치 $c_i$ 와 전체 CoM $c$ 의 차이 $r_i = c_i - c$ 를 이용한다:
 
 **선 운동량 기여**:
+
 ```math
 A_G[3:, :] \mathrel{+}= m_i J_{v,i} \tag{6.3a}
 ```
 
 **각운동량 기여**:
+
 ```math
 A_G[:3, :] \mathrel{+}= (R_i I_{cm,i} R_i^T) J_{\omega,i} + m_i [r_i]_\times J_{v,i} \tag{6.3b}
 ```
@@ -1237,9 +1273,11 @@ CoM 프레임에서의 운동 방정식:
 ```
 
 성분별로:
+
 ```math
 \dot{l}_G = M_{total} \ddot{c} = \sum_i f_i + M_{total} g \hat{z} \tag{6.5a}
 ```
+
 ```math
 \dot{k}_G = \sum_i (p_i - c) \times f_i + \sum_i \tau_{ext,i} \tag{6.5b}
 ```
@@ -1249,9 +1287,11 @@ CoM 프레임에서의 운동 방정식:
 보행 제어의 단순화를 위해 CoM 높이를 $z_0$ 로 고정하는 3D LIPM을 사용한다.
 
 **CoM 동역학** (수평면):
+
 ```math
 \ddot{c}_x = \frac{g}{z_0}(c_x - p_{zmp,x}) \tag{6.6a}
 ```
+
 ```math
 \ddot{c}_y = \frac{g}{z_0}(c_y - p_{zmp,y}) \tag{6.6b}
 ```
@@ -1383,21 +1423,25 @@ Delassus 행렬의 성질: $M \succ 0$ 이고 $J_n$ 이 만약 행 독립이면 
 #### 7.2.3 Delassus 행렬의 유도 (완전)
 
 이산화된 운동 방정식 (7.14):
+
 ```math
 M v_{k+1} = M v_k + h_{step}(S^T \tau - h) + J_n^T \lambda_n \tag{7.7a}
 ```
 
 양변에 $M^{-1}$ 를 곱하면:
+
 ```math
 v_{k+1} = v_k + M^{-1}(h_{step}(S^T \tau - h) + J_n^T \lambda_n) \tag{7.7b}
 ```
 
 법선 방향 속도 제약 ($J_n v_{k+1} \geq -\phi_n/h_{step}$):
+
 ```math
 J_n v_{k+1} = J_n v_k + J_n M^{-1}(h_{step}(S^T\tau - h)) + J_n M^{-1} J_n^T \lambda_n \tag{7.7c}
 ```
 
 이를 LCP 표준 형태로 재정리하면:
+
 ```math
 \underbrace{J_n M^{-1} J_n^T}_{M_{LCP}} \lambda_n + \underbrace{J_n v_k + J_n M^{-1} h_{step}(S^T\tau - h) + \phi_n/h_{step}}_{q_{LCP}} = w \tag{7.7d}
 ```
@@ -1463,11 +1507,13 @@ FB 방정식 $F(\lambda) = 0$ 을 반복적으로 풀기 위해 역추적 직선
 FB-Newton이 수렴하지 않는 ill-conditioned 문제를 위해 내부점법을 제공한다.
 
 **완화된 상보성 (Relaxed Complementarity)**:
+
 ```math
 \lambda_i w_i = \kappa \quad (\kappa > 0) \tag{7.11}
 ```
 
 $\kappa$ 를 **쌍대성 측도 (Duality Measure)**:
+
 ```math
 \mu = \frac{\lambda^T w}{n} \tag{7.12}
 ```
@@ -1608,6 +1654,7 @@ tau[6:] -= Kp * q_err + Kd * dq_err  # PD 피드백
 이론적으로 완전한 추적(Perfect Tracking)을 보장하는 비선형 피드포워드 제어.
 
 **제어 법칙**:
+
 ```math
 \tau = M_{jj} \ddot{q}_{des} + h_j \tag{8.3}
 ```
@@ -1615,11 +1662,13 @@ tau[6:] -= Kp * q_err + Kd * dq_err  # PD 피드백
 **완전 추적 증명**:
 
 실제 관절 가속도는 운동 방정식 (7.16b)에서:
+
 ```math
 M_{jj} \ddot{q} = \tau - h_j = M_{jj} \ddot{q}_{des} + h_j - h_j = M_{jj} \ddot{q}_{des} \tag{8.4}
 ```
 
 $M_{jj} \succ 0$ 이므로:
+
 ```math
 \ddot{q} = \ddot{q}_{des} \tag{8.5}
 ```
@@ -1633,11 +1682,13 @@ $M_{jj} \succ 0$ 이므로:
 ```
 
 추적 오차 $e = q - q_{ref}$ 의 동역학:
+
 ```math
 \ddot{e} + K_d \dot{e} + K_p e = 0 \tag{8.7}
 ```
 
 이는 2차 선형 미분 방정식으로, 특성 다항식:
+
 ```math
 s^2 + K_d s + K_p = 0 \tag{8.8}
 ```
@@ -1653,6 +1704,7 @@ K_p = \omega_n^2, \quad K_d = 2\zeta\omega_n \tag{8.9}
 ```
 
 THOR 구현에서 다리 관절: $K_p = 600$, $K_d = 60$:
+
 ```math
 \omega_n = \sqrt{600} \approx 24.5 \;\text{rad/s}, \quad \zeta = \frac{60}{2 \times 24.5} \approx 1.22 \;(\text{과감쇠}) \tag{8.10}
 ```
@@ -1720,16 +1772,19 @@ def swing_leg_angles(s):
 $s \in [0, 1]$ ($s=0$: 발 착지, $s=1$: 발 떼기)
 
 **엉덩이 피치**: 선형 감소 (굴곡 → 신전):
+
 ```math
 \theta_{hip}^{stance}(s) = \theta_{flex}(1-s) + \theta_{ext} s \tag{8.14}
 ```
 
 **무릎 피치**: 지지 중 작은 굴곡:
+
 ```math
 \theta_{knee}^{stance}(s) = \theta_{stance} + 10° \cdot \sin\left(\frac{\pi s}{2}\right) \tag{8.15}
 ```
 
 **발목 피치**: 배측굴곡 + 추진:
+
 ```math
 \theta_{ankle}^{stance}(s) = 5° \cdot \sin(\pi s) + \theta_{push} \cdot s^2 \tag{8.16}
 ```
@@ -1775,6 +1830,7 @@ A^T P + P A - P B R^{-1} B^T P + Q = 0 \tag{8.19}
 ```math
 \min_{\tau, f} \|A_G(q) v - h_{G,ref}\|^2 + \lambda \|\tau\|^2 \tag{8.20}
 ```
+
 ```math
 \text{s.t.} \quad M \dot{v} + h = S^T \tau + J_c^T f_c, \quad \text{마찰 원뿔 제약}
 ```
@@ -1818,11 +1874,13 @@ A^T P + P A - P B R^{-1} B^T P + Q = 0 \tag{8.19}
 ### 9.1 반암시적 오일러 (Semi-Implicit / Symplectic Euler)
 
 **속도 업데이트** (전진 오일러):
+
 ```math
 v_{k+1} = v_k + h \cdot \dot{v}_k \tag{9.1}
 ```
 
 **설정 업데이트** (후진 오일러 — 새 속도 사용):
+
 ```math
 q_{k+1} = q_k + h \cdot v_{k+1} \tag{9.2}
 ```
@@ -2041,6 +2099,7 @@ q_new[7:]  += h * v[6:]         # 관절 += h * 관절속도
 **성질 2** (크로스곱 표현): $p \times q = [p]_\times q$
 
 **증명**: 
+
 ```math
 [p]_\times q = \begin{bmatrix} -p_z q_y + p_y q_z \\ p_z q_x - p_x q_z \\ -p_y q_x + p_x q_y \end{bmatrix} = p \times q \quad \checkmark \tag{B.2}
 ```
@@ -2048,9 +2107,11 @@ q_new[7:]  += h * v[6:]         # 관절 += h * 관절속도
 **성질 3**: $[p]_\times^2 = p p^T - \|p\|^2 I_3$
 
 **증명**: 
+
 ```math
 (p \times q) \times r = (q r^T - r q^T)p
 ```
+
 에서 행렬 형태로 변환하면 확인 가능. $\quad \checkmark$
 
 **성질 4**: $[p]_\times [p]_\times^T = \|p\|^2 I_3 - p p^T$ (음의 준정치)
@@ -2064,6 +2125,7 @@ q_new[7:]  += h * v[6:]         # 관절 += h * 관절속도
 ```
 
 **증명**: 임의의 $q$ 에 대해 $(Rp) \times q = R(p \times R^T q)$ 에서:
+
 ```math
 [Rp]_\times q = R[p]_\times R^T q \quad \forall q \implies [Rp]_\times = R[p]_\times R^T \quad \checkmark
 ```
@@ -2083,14 +2145,17 @@ $R(t) \in SO(3)$ 의 시간 미분:
 ```
 
 **유도**: $R R^T = I$ 를 시간 미분하면:
+
 ```math
 \dot{R} R^T + R \dot{R}^T = 0
 ```
+
 ```math
 \dot{R} R^T = -(\dot{R} R^T)^T
 ```
 
 따라서 $\dot{R} R^T$ 는 반대칭이므로 어떤 벡터 $\omega$ 에 대해 $\dot{R} R^T = [\omega]_\times$ 가 성립한다. 이로부터:
+
 ```math
 \dot{R} = [\omega]_\times R \quad \checkmark \tag{C.2}
 ```
@@ -2108,17 +2173,21 @@ $R(t) \in SO(3)$ 의 시간 미분:
 ```math
 \dot{w} = \frac{1}{2}(-\omega_x x - \omega_y y - \omega_z z) \tag{C.4a}
 ```
+
 ```math
 \dot{x} = \frac{1}{2}(\omega_x w + \omega_z y - \omega_y z) \tag{C.4b}
 ```
+
 ```math
 \dot{y} = \frac{1}{2}(\omega_y w - \omega_z x + \omega_x z) \tag{C.4c}
 ```
+
 ```math
 \dot{z} = \frac{1}{2}(\omega_z w + \omega_x y - \omega_y x) \tag{C.4d}
 ```
 
 이를 행렬로 표현하면:
+
 ```math
 \dot{\mathbf{q}} = \frac{1}{2} \Omega(\omega) \mathbf{q}, \quad \Omega(\omega) = \begin{bmatrix} 0 & -\omega_x & -\omega_y & -\omega_z \\ \omega_x & 0 & \omega_z & -\omega_y \\ \omega_y & -\omega_z & 0 & \omega_x \\ \omega_z & \omega_y & -\omega_x & 0 \end{bmatrix} \tag{C.5}
 ```
@@ -2304,6 +2373,7 @@ s_{1,2} = \frac{-K_d \pm \sqrt{K_d^2 - 4K_p}}{2} \tag{F.1}
 ```
 
 THOR 다리 관절 ($K_p=600$, $K_d=60$):
+
 ```math
 K_d^2 - 4K_p = 3600 - 2400 = 1200 > 0 \tag{F.2}
 ```
