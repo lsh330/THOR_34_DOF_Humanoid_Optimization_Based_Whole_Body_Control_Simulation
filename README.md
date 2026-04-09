@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-248%20passed-brightgreen.svg)](#11-테스트-및-검증)
-[![Numba JIT](https://img.shields.io/badge/Numba-JIT%207408Hz-orange.svg)](#9-성능-최적화)
+[![Numba JIT](https://img.shields.io/badge/Numba-JIT%208500%2BHz-orange.svg)](#9-성능-최적화)
 
 **접촉-내재적 모델 예측 제어 (Contact-Implicit MPC)**, **LCP 기반 접촉 역학**, 그리고 **Featherstone O(N) 강체 동역학**을 Python으로 처음부터 (from scratch) 구현한 **THOR 34-DOF 휴머노이드 로봇** 전신 제어 시뮬레이션이다. 운동 방정식, 동역학 알고리즘, 최적화 솔버 모두 제1원리(first principles)에서 도출하였으며 Pinocchio, Drake, MuJoCo 등 외부 동역학 라이브러리를 사용하지 않는다.
 
@@ -45,9 +45,9 @@
 
 ## 2. 주요 기여점 및 성과
 
-1. **처음부터 구현한 Featherstone O(N) 알고리즘** (RNEA, CRBA, ABA): 40-DOF 부유 기저 휴머노이드에 대해 CRBA-RNEA 교차 검증으로 수치 정밀도 $2.27 \times 10^{-13}$ N·m 달성
+1. **처음부터 구현한 Featherstone O(N) 알고리즘** (RNEA, CRBA, ABA): 40-DOF 부유 기저 휴머노이드에 대해 CRBA-RNEA 교차 검증으로 수치 정밀도 $1.14 \times 10^{-13}$ N·m 달성
 
-2. **Numba JIT 가속**: RNEA 37.8×, CRBA 47.9×, FK 55.0× 속도 향상 — 순수 역학 연산 **7408 Hz**, 전체 시뮬레이션 **12.8× 실시간** 달성
+2. **Numba JIT 가속**: RNEA 37.8×, CRBA 47.9×, FK 55.0× 속도 향상 — 순수 역학 연산 **8500+ Hz**, 전체 시뮬레이션 **12.8× 실시간** 달성
 
 3. **접촉-내재적 MPC (CI-MPC)**: LCP 기반 Stewart-Trinkle 시간 스테핑과 Fischer-Burmeister NCP 솔버로 접촉 모드 열거 없이 자동 접촉 탐색 구현
 
@@ -300,11 +300,11 @@ ABA는 전진 동역학 $\ddot{\mathbf{q}} = \text{FD}(\mathbf{q}, \mathbf{v}, \
 M(\mathbf{q})\ddot{\mathbf{q}} + \mathbf{h}(\mathbf{q}, \dot{\mathbf{q}}) = \mathrm{RNEA}(\mathbf{q}, \dot{\mathbf{q}}, \ddot{\mathbf{q}})
 ```
 
-10개 무작위 구성에서 검증 — 최대 오차: **$2.27 \times 10^{-13}$ N·m** (기계 정밀도 수준)
+10개 무작위 구성에서 검증 — 최대 오차: **$1.14 \times 10^{-13}$ N·m** (기계 정밀도 수준)
 
 ![CRBA-RNEA 교차 검증](docs/images/crba_rnea_cross_validation.png)
 
-**그림 2.** 20개 무작위 구성(800개 토크 값)에서 CRBA-RNEA 교차 검증. 왼쪽: 완벽한 대각선 정렬을 보이는 산점도. 오른쪽: 최대 오차 $2.27 \times 10^{-13}$ N·m의 오차 히스토그램.
+**그림 2.** 20개 무작위 구성(800개 토크 값)에서 CRBA-RNEA 교차 검증. 왼쪽: 완벽한 대각선 정렬을 보이는 산점도. 오른쪽: 최대 오차 $1.14 \times 10^{-13}$ N·m의 오차 히스토그램.
 
 ---
 
@@ -513,7 +513,7 @@ M_{jj} \ddot{\mathbf{q}}_j = \boldsymbol{\tau}_j - \mathbf{h}_j
 | RNEA (역동역학) | 1.25 ms/call | **0.033 ms/call** | **37.8×** |
 | CRBA (질량 행렬) | 1.11 ms/call | **0.026 ms/call** | **47.9×** |
 | FK (순기구학) | 0.39 ms/call | **0.007 ms/call** | **55.0×** |
-| **순수 역학** | ~600 Hz | **7408 Hz** | **~12×** |
+| **순수 역학** | ~600 Hz | **8500+ Hz** | **~14×** |
 | **전체 시뮬레이션** | ~300 Hz | **~3840 Hz** | **12.8×** |
 
 **구현 파일:** `thor/dynamics/rnea_jit.py`, `thor/dynamics/crba_jit.py`, `thor/dynamics/aba_jit.py`, `thor/model/kinematics_jit.py`
@@ -726,7 +726,7 @@ $ python -m pytest thor/tests/ -v
 | 자유낙하 ddq[5] | −9.810 m/s² (정확) |
 | LCP 솔버 | FB-Newton, ~5회 반복, 잔차 < 1e-6 |
 | Cholesky 속도향상 | LU 분해 대비 37% 빠름 |
-| **CRBA-RNEA 최대 오차** | **2.27 × 10⁻¹³ N·m** (기계 정밀도) |
+| **CRBA-RNEA 최대 오차** | **1.14 × 10⁻¹³ N·m** (기계 정밀도) |
 | **테스트** | **248/248 통과** |
 
 ### 11.3 수학적 검증 (27 PASS, 0 FAIL)

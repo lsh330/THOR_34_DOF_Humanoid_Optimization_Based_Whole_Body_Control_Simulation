@@ -199,8 +199,8 @@ def test_zero_gravity_linear_momentum(model, q_standing):
     consts.GRAVITY_VEC[:] = original_grav_vec
 
     dp = np.linalg.norm(p1 - p0)
-    # Tolerance accounts for discretization error over 50 steps
-    assert dp < 5.0, f"Linear momentum drift {dp:.4f} Ns exceeds tolerance"
+    # Measured drift ~0.028 Ns over 50 steps; 3× margin for environment variance
+    assert dp < 0.09, f"Linear momentum drift {dp:.4f} Ns exceeds tolerance"
 
 
 # ---------------------------------------------------------------------------
@@ -246,7 +246,8 @@ def test_zero_gravity_angular_momentum(model, q_standing):
     consts.GRAVITY_VEC[:] = original_grav_vec
 
     dL = np.linalg.norm(L1 - L0)
-    assert dL < 5.0, f"Angular momentum drift {dL:.4f} Nms exceeds tolerance"
+    # Measured drift ~0.000083 Nms over 50 steps; 3× margin for environment variance
+    assert dL < 0.0003, f"Angular momentum drift {dL:.6f} Nms exceeds tolerance"
 
 
 # ---------------------------------------------------------------------------
@@ -294,6 +295,7 @@ def test_potential_energy_sum(model, q_standing):
     Total PE = Σ m_i * g * z_com_i must equal m_total * g * z_com.
 
     Validates that com_position() is consistent with individual body masses.
+    Uses p_i + R_i @ link.com to account for body CoM offset within each link.
     """
     from thor.model.kinematics import forward_kinematics, body_position
 
@@ -303,16 +305,17 @@ def test_potential_energy_sum(model, q_standing):
     pe_sum = 0.0
     for i, link in enumerate(model.links):
         p_body = body_position(X_world[i])
-        # Approximate body CoM position (body origin, not exact CoM offset)
-        pe_sum += link.mass * GRAVITY * p_body[2]
+        R_i = X_world[i][:3, :3]
+        # Use exact CoM position: body origin + rotated CoM offset
+        p_com = p_body + R_i @ link.com
+        pe_sum += link.mass * GRAVITY * p_com[2]
 
     z_com = com_position(q, model)[2]
     pe_total = model.total_mass * GRAVITY * z_com
 
-    # The discrepancy comes from CoM offset within each body;
-    # for small offsets this should be within 20% of total PE
-    assert abs(pe_sum - pe_total) / (abs(pe_total) + 1e-6) < 0.3, (
-        f"PE decomposition mismatch: sum={pe_sum:.1f}J, total={pe_total:.1f}J"
+    # With correct CoM offset the decomposition should match to near machine precision
+    assert abs(pe_sum - pe_total) / (abs(pe_total) + 1e-6) < 1e-6, (
+        f"PE decomposition mismatch: sum={pe_sum:.4f}J, total={pe_total:.4f}J"
     )
 
 

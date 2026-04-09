@@ -685,7 +685,7 @@ $$\kappa(M) = \frac{\lambda_{max}(M)}{\lambda_{min}(M)} \tag{4.14}$$
 
 $\kappa(M) \approx 1 / (7.5 \times 10^{-4}) \approx 1330$
 
-조건수 1330은 double precision ($\epsilon_{machine} \approx 10^{-16}$)에서 약 $10^{-13}$ 의 상대 오차를 의미한다. 이는 CRBA-RNEA 교차 검증에서 관측된 $2.27 \times 10^{-13}$ N·m 오차와 일치한다.
+조건수 1330은 double precision ($\epsilon_{machine} \approx 10^{-16}$)에서 약 $10^{-13}$ 의 상대 오차를 의미한다. 이는 CRBA-RNEA 교차 검증에서 관측된 $1.14 \times 10^{-13}$ N·m 오차와 일치한다.
 
 ---
 
@@ -798,7 +798,7 @@ RNEA의 결과는 다음 교차 검증으로 확인할 수 있다:
 
 $$\text{RNEA}(q, v, \dot{v}) = M(q) \dot{v} + h(q, v) \tag{5.10}$$
 
-이 항등식은 CRBA-RNEA 교차 검증에서 기계 정밀도($2.27 \times 10^{-13}$ N·m)로 확인된다.
+이 항등식은 CRBA-RNEA 교차 검증에서 기계 정밀도($1.14 \times 10^{-13}$ N·m)로 확인된다.
 
 ### 5.2 CRBA — 질량 행렬 (Composite Rigid Body Algorithm)
 
@@ -963,7 +963,7 @@ $$M \cdot \dot{v} + h = \text{RNEA}(q, v, \dot{v}) \quad \forall \dot{v} \tag{5.
 
 $$\epsilon = \| \text{CRBA}(q) \cdot \dot{v}_{test} + \text{RNEA}(q, v, 0) - \text{RNEA}(q, v, \dot{v}_{test}) \|_\infty \tag{5.25}$$
 
-를 계산한다. THOR에서 $\epsilon \leq 2.27 \times 10^{-13}$ N·m (기계 정밀도).
+를 계산한다. THOR에서 $\epsilon \leq 1.14 \times 10^{-13}$ N·m (기계 정밀도).
 
 ### 5.5 부동 기저 블록의 물리적 의미
 

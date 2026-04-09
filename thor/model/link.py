@@ -37,5 +37,6 @@ class LinkData:
                 JointType.REVOLUTE_X: 0,
                 JointType.REVOLUTE_Y: 1,
                 JointType.REVOLUTE_Z: 2,
+                # Future: PRISMATIC_X: 0, PRISMATIC_Y: 1, PRISMATIC_Z: 2
             }
             self.joint_axis = _type_to_axis.get(self.joint_type, 2)

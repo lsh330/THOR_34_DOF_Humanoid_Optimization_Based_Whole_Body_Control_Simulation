@@ -98,7 +98,7 @@ def _draw_com_trail(ax, com_trail: deque, view: str = 'front',
     n = len(trail)
     xi, yi = (1, 2) if view == 'front' else (0, 2)
     for k, pos in enumerate(trail):
-        alpha = alpha_min + (1.0 - alpha_min) * k / (n - 1)
+        alpha = min(1.0, alpha_min + (1.0 - alpha_min) * k / (n - 1))
         size  = 3 + 4 * k / (n - 1)
         ax.plot(pos[xi], pos[yi], 'o',
                 color='#7C3AED', markersize=size,

@@ -128,9 +128,9 @@ def test_ground_reaction_equals_weight(model, q0, pd_controller):
     fz_late = [info.get("total_fz", 0.0) for info in infos[-50:]]
     avg_fz = np.mean(fz_late)
 
-    # Schur-complement method encodes GRF differently; allow generous tolerance
-    assert abs(avg_fz) < weight * 10.0, (
-        f"Average Fz {avg_fz:.1f} N far from expected weight {weight:.1f} N"
+    # After settling, GRF should balance the robot's weight (0.5 ~ 2.0× range)
+    assert 0.5 * weight < avg_fz < 2.0 * weight, (
+        f"Average Fz {avg_fz:.1f} N outside [0.5, 2.0]× weight {weight:.1f} N"
     )
 
 

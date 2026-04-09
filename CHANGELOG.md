@@ -12,7 +12,7 @@
 
 #### 성능 (Performance)
 - **Numba JIT 가속** — RNEA 37.8×, CRBA 47.9×, FK 55.0× 속도 향상
-  - 순수 역학 연산 속도: ~600 Hz → **7408 Hz**
+  - 순수 역학 연산 속도: ~600 Hz → **8500+ Hz**
   - 전체 시뮬레이션 속도: ~300 Hz → **~3840 Hz** (12.8× 실시간)
   - 구현 파일: `thor/dynamics/rnea_jit.py`, `thor/dynamics/crba_jit.py`, `thor/dynamics/aba_jit.py`, `thor/model/kinematics_jit.py`
 
@@ -101,7 +101,7 @@
 - **관절 PD + 중력 보상**
 
 #### 검증 (Verification)
-- **CRBA-RNEA 교차 검증**: $2.27 \times 10^{-13}$ N·m (기계 정밀도)
+- **CRBA-RNEA 교차 검증**: $1.14 \times 10^{-13}$ N·m (기계 정밀도)
 - **137 tests, 16개 모듈** — 공간 대수, 동역학, 접촉, 보행, 성능 검증
 - 12패널 시각적 증거 대시보드 (`test_evidence.png`)
 
