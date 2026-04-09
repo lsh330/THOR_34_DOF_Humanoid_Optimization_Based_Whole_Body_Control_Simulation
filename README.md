@@ -201,7 +201,7 @@ v = [ v_base(3), omega_base(3),   <-- 부유 기저 트위스트 (Twist)
 
 ### 6.1 운동 방정식 (Equations of Motion)
 
-부유 기저 로봇의 $n_v$-차원 일반화 속도 공간에서의 운동 방정식:
+부유 기저 로봇의 $n_{v}$-차원 일반화 속도 공간에서의 운동 방정식:
 
 ```math
 M(\mathbf{q})\dot{\mathbf{v}} + \mathbf{h}(\mathbf{q}, \mathbf{v}) = S^T\boldsymbol{\tau} + J_c^T\mathbf{f}_c
@@ -211,12 +211,13 @@ M(\mathbf{q})\dot{\mathbf{v}} + \mathbf{h}(\mathbf{q}, \mathbf{v}) = S^T\boldsym
 
 | 기호 | 차원 | 설명 |
 |:---|:---|:---|
-| $M(\mathbf{q})$ | $n_v \times n_v$ | 관절 공간 관성 행렬 (Mass Matrix, 대칭·양정치) |
-| $\mathbf{h}(\mathbf{q}, \mathbf{v})$ | $n_v$ | 바이어스 힘 (Bias Forces): 코리올리 + 원심력 + 중력 |
-| $S$ | $n_a \times n_v$ | 구동 선택 행렬: $S = [0_{34 \times 6},\; I_{34}]$ |
-| $\boldsymbol{\tau}$ | $n_a = 34$ | 구동 관절 토크 |
-| $J_c$ | $n_c \times n_v$ | 접촉 자코비안 (Contact Jacobian) |
-| $\mathbf{f}_c$ | $n_c$ | 접촉력 (LCP로 결정) |
+| 기호 | 차원 | 설명 |
+| $M(\mathbf{q})$ | 40×40 | 관절 공간 관성 행렬 (Mass Matrix, 대칭·양정치) |
+| $\mathbf{h}(\mathbf{q}, \mathbf{v})$ | 40 | 바이어스 힘 (Bias Forces): 코리올리 + 원심력 + 중력 |
+| $S$ | 34×40 | 구동 선택 행렬 |
+| $\boldsymbol{\tau}$ | 34 | 구동 관절 토크 |
+| $J_{c}$ | 접촉수×40 | 접촉 자코비안 (Contact Jacobian) |
+| $\mathbf{f}_{c}$ | 접촉수 | 접촉력 (LCP로 결정) |
 
 질량 행렬의 2×2 블록 구조 (부유 기저(b) / 관절(j) 분리):
 
@@ -262,7 +263,7 @@ RNEA는 $\boldsymbol{\tau} = \text{ID}(\mathbf{q}, \mathbf{v}, \mathbf{a})$를 O
 \mathbf{f}_{\lambda(i)} \mathrel{+}= {}^iX_{\lambda(i)}^T \mathbf{f}_i, \qquad \tau_i = S_i^T \mathbf{f}_i
 ```
 
-**중력 트릭:** 기저 가속도를 $\mathbf{a}_0 = [0,0,0,\; 0,0,+g]^T$로 설정하면 모든 강체에 중력이 작용하는 것과 동일한 효과를 가상 힘으로 구현할 수 있다 (Luh, Walker & Paul, 1980).
+**중력 트릭:** 기저 가속도를 $\mathbf{a}_{0} = [0,0,0,\; 0,0,+g]^T$로 설정하면 모든 강체에 중력이 작용하는 것과 동일한 효과를 가상 힘으로 구현할 수 있다 (Luh, Walker & Paul, 1980).
 
 **구현 파일:** `thor/dynamics/rnea.py`, `thor/dynamics/rnea_jit.py`
 
@@ -326,7 +327,7 @@ M(\mathbf{q}_k)(\mathbf{v}_{k+1} - \mathbf{v}_k) = h[-C(\mathbf{q}_k, \mathbf{v}
 \mathbf{q}_{k+1} = \mathbf{q}_k + h\,\mathbf{v}_{k+1}
 ```
 
-**마찰 모델:** Coulomb 마찰 $\lVert \mathbf{f}_t \rVert \leq \mu f_n$을 8면 다각형 원뿔(octagonal cone, $n_f = 8$)로 근사 — 실제 원형 원뿔 대비 오차 < 4%.
+**마찰 모델:** Coulomb 마찰 원뿔을 8면 다각형(octagonal cone)으로 근사 — 실제 원형 원뿔 대비 오차 < 4%.
 
 ### 7.3 Schur Complement 기저 소거
 
@@ -406,7 +407,7 @@ J = \sum_{k=0}^{T-1} \bigl[ \lVert \mathbf{q}_k - \mathbf{q}_k^{\mathrm{ref}} \r
 
 ### 8.2 계산 토크 제어 — 보행 (Computed Torque Control)
 
-양발 지지 시 기저는 구속되어 $\ddot{\mathbf{q}}_b = \mathbf{0}$이다. **Schur 보완 기저 소거**를 사용하여 제약된 기저 DOF를 먼저 소거한다:
+양발 지지 시 기저는 구속되어 $\ddot{\mathbf{q}}_{b} = \mathbf{0}$이다. **Schur 보완 기저 소거**를 사용하여 제약된 기저 DOF를 먼저 소거한다:
 
 기저 소거 후 관절 방정식:
 
@@ -432,7 +433,7 @@ M_{jj} \ddot{\mathbf{q}}_j = \boldsymbol{\tau}_j - \mathbf{h}_j
 \ddot{\mathbf{e}} + K_d \dot{\mathbf{e}} + K_p \mathbf{e} = \mathbf{0}
 ```
 
-**이득 선택:** 다리 관절에 $K_p = 600$ rad/s², $K_d = 60$ rad/s (고유 진동수 $\omega_n \approx 24.5$ rad/s, 제동비 $\zeta \approx 1.2$: 약과도제동). 팔 관절에 $K_p = 300$, $K_d = 30$.
+**이득 선택:** 다리 관절에 $K_{p} = 600$ rad/s², $K_{d} = 60$ rad/s (고유 진동수 $\omega_{n} \approx 24.5$ rad/s, 제동비 $\zeta \approx 1.2$: 약과도제동). 팔 관절에 $K_{p} = 300$, $K_{d} = 30$.
 
 **구현 파일:** `thor/control/walking_controller.py`
 
@@ -454,7 +455,7 @@ M_{jj} \ddot{\mathbf{q}}_j = \boldsymbol{\tau}_j - \mathbf{h}_j
 \theta_{\mathrm{knee}}(s) = \theta_0 + (\theta_{\mathrm{peak}} - \theta_0) \cdot \sin^{0.8}(\pi s)
 ```
 
-($\theta_0 = 5°$, $\theta_{\mathrm{peak}} = 45°$, 지수 0.8로 스윙의 ~40% 시점에 피크)
+($\theta_{0} = 5°$, $\theta_{\mathrm{peak}} = 45°$, 지수 0.8로 스윙의 ~40% 시점에 피크)
 
 **발목 피치 (Ankle Pitch)** — 발 지면 여유를 위한 배측굴곡:
 
@@ -749,7 +750,7 @@ $ python -m pytest thor/tests/ -v
 - CRBA-RNEA 항등식: $M\ddot{\mathbf{q}} + \mathbf{h} = \text{RNEA}$ (10개 구성, 오차 < 1e-4)
 - 질량 행렬 대칭성: $\|M - M^T\| < 10^{-8}$
 - 공간 관성 양정치성: 최소 고유값 > 0 (50개 무작위 구성)
-- 중력 힘 정확도: $|g_z - mg| < 10^{-6}$ N
+- 중력 힘 정확도: $|g_{z} - mg| < 10^{-6}$ N
 - 에너지 보존: 자유낙하 중 총 에너지 드리프트 < 5%
 - LCP 상보성: $\boldsymbol{\lambda} \cdot \mathbf{w} < 10^{-8}$
 
