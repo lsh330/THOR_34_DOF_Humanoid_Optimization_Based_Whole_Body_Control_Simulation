@@ -1,11 +1,11 @@
-# THOR 34-DOF 휴머노이드: 최적화 기반 전신 제어 시뮬레이션
+# THOR 40-DOF 휴머노이드: 최적화 기반 전신 제어 시뮬레이션
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-248%20passed-brightgreen.svg)](#11-테스트-및-검증)
 [![Numba JIT](https://img.shields.io/badge/Numba-JIT%208500%2BHz-orange.svg)](#9-성능-최적화)
 
-**접촉-내재적 모델 예측 제어 (Contact-Implicit MPC)**, **LCP 기반 접촉 역학**, 그리고 **Featherstone O(N) 강체 동역학**을 Python으로 처음부터 (from scratch) 구현한 **THOR 34-DOF 휴머노이드 로봇** 전신 제어 시뮬레이션이다. 운동 방정식, 동역학 알고리즘, 최적화 솔버 모두 제1원리(first principles)에서 도출하였으며 Pinocchio, Drake, MuJoCo 등 외부 동역학 라이브러리를 사용하지 않는다.
+**접촉-내재적 모델 예측 제어 (Contact-Implicit MPC)**, **LCP 기반 접촉 역학**, 그리고 **Featherstone O(N) 강체 동역학**을 Python으로 처음부터 (from scratch) 구현한 **THOR 40-DOF 휴머노이드 로봇** 전신 제어 시뮬레이션이다. 운동 방정식, 동역학 알고리즘, 최적화 솔버 모두 제1원리(first principles)에서 도출하였으며 Pinocchio, Drake, MuJoCo 등 외부 동역학 라이브러리를 사용하지 않는다.
 
 > 수학적 이론의 완전한 유도는 [docs/THEORY.md](docs/THEORY.md)를 참조한다.
 
